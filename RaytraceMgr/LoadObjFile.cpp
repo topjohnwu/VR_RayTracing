@@ -23,6 +23,7 @@
 #define _CRT_SECURE_NO_DEPRECATE 1
 
 #include <stdio.h>
+#include <string.h>
 #include "LoadObjFile.h"
 
 #include "../Graphics/ViewableParallelogram.h"

@@ -12,8 +12,6 @@ else
 	FLAGS = $(CPPFLAGS) $(MACFLAG)
 endif
 
-FLAGS = $(CPPFLAGS) $(MACFLAG)
-
 OBJ = \
 	DataStructs/DoubleRecurse.o \
 	DataStructs/KdTree.o \
