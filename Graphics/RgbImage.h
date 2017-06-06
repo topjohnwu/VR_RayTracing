@@ -1,7 +1,7 @@
 /*
  *
- * RayTrace Software Package, release 1.0.4,  February 2004.
- *                            release 1.1. March 2017.
+ * RayTrace Software Package, release 3.2.  May 3, 2007.
+ *		Graphics subpackage
  *
  * Author: Samuel R. Buss
  *
@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-// Include the next line to turn off the routines that use OpenGL
+// Comment in the next line to turn off the routines that use OpenGL
 // #define RGBIMAGE_DONT_USE_OPENGL
 
 class RgbImage
@@ -34,12 +34,15 @@ public:
 	RgbImage();
 	RgbImage( const char* filename );
 	RgbImage( int numRows, int numCols );	// Initialize a blank bitmap of this size.
+	RgbImage(const RgbImage *image);		// Copy constructor
 	~RgbImage();
 
+	// The next routines return "true" to indicate successful completion.
 	bool LoadBmpFile( const char *filename );		// Loads the bitmap from the specified file
 	bool WriteBmpFile( const char* filename );		// Write the bitmap to the specified file
 #ifndef RGBIMAGE_DONT_USE_OPENGL
 	bool LoadFromOpenglBuffer();					// Load the bitmap from the current OpenGL buffer
+	bool DrawToOpenglBuffer();						// Draw the bitmap into the current OpenGL buffer
 #endif
 
 	long GetNumRows() const { return NumRows; }
@@ -80,8 +83,8 @@ private:
 	static short readShort( FILE* infile );
 	static long readLong( FILE* infile );
 	static void skipChars( FILE* infile, int numChars );
-	static void RgbImage::writeLong( long data, FILE* outfile );
-	static void RgbImage::writeShort( short data, FILE* outfile );
+	static void writeLong( long data, FILE* outfile );
+	static void writeShort( short data, FILE* outfile );
 	
 	static unsigned char doubleToUnsignedChar( double x );
 

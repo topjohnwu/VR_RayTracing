@@ -25,7 +25,11 @@
 //	Eventually there should be a new version of glut.h that doesn't need this.
 #include <stdlib.h>
 #define GLUT_DISABLE_ATEXIT_HACK
-#include <GL/glut.h>
+#ifdef __APPLE__
+#include <GLUT/glut.h>	// Mac GLUT OpenGL includes
+#else
+#include <GL/glut.h>	// GLUT OpenGL includes
+#endif
 
 #include "../VrMath/LinearR3.h"
 #include "../DataStructs/Array.h"
@@ -86,7 +90,7 @@ public:
 	
 	bool AddLight( const Light& light );			// Returns false if quota of lights exceeded
 
-	void GlutRenderer::InitLightsAndView( const SceneDescription& scene );
+	void InitLightsAndView( const SceneDescription& scene );
 
 	void RenderViewable( const ViewableBase& object );
 	void RenderViewables( const SceneDescription& scene );

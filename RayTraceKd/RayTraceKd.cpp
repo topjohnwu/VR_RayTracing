@@ -30,7 +30,11 @@
 //	Eventually there should be a new version of glut.h that doesn't need this.
 #include <stdlib.h>
 #define GLUT_DISABLE_ATEXIT_HACK
+#ifdef __APPLE__
+#include <GLUT/glut.h>	// Mac GLUT OpenGL includes
+#else
 #include <GL/glut.h>	// GLUT OpenGL includes
+#endif
 
 #include "RayTraceStats.h"
 

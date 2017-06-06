@@ -98,6 +98,7 @@ public:
 	const VectorR3& GetColorEmissive() const;
 
 	virtual double GetPhongShininess() const { return 50; }
+	virtual ~MaterialBase() {}
 
 protected:
 

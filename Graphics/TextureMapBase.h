@@ -42,7 +42,7 @@ public:
 	virtual void ApplyTexture( VisiblePoint& visPoint, const VectorR3& viewDir ) const;
 
 	// Convert a unit vector reflection direction to cube map coordinates
-	static void TextureMapBase::ReflectDirToCubeMap( const VectorR3& reflectDir, 
+	static void ReflectDirToCubeMap( const VectorR3& reflectDir, 
 										  VectorR2* cubeMapCoords );
 
 protected:

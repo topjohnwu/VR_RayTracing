@@ -1,7 +1,7 @@
 /*
  *
- * RayTrace Software Package, release 1.0.4,  February 2004.
- *                            release 1.1. March 2017.
+ * RayTrace Software Package, release 3.2.  May 3, 2007.
+ *		Graphics subpackage
  *
  * Author: Samuel R. Buss
  *
@@ -19,14 +19,17 @@
  *
  */
 
+// This tells the Visual C++ 2005 compiler to allow use of fopen, sscnaf, strcpy, etc.
+// Undocumented: This must be included *before* the #include of stdio.h (!!)
+#define _CRT_SECURE_NO_DEPRECATE 1
+
 #include "RgbImage.h"
 
 #ifndef RGBIMAGE_DONT_USE_OPENGL
+#if defined(_WIN32)			// If on windows, need this for gl.h
 #include <windows.h>
-#include "GL/gl.h"
-#endif
-#ifndef BI_RGB
-#define BI_RGB 0
+#endif  // defined(_WIN32)
+#include <OpenGL/gl.h>
 #endif
 
 RgbImage::RgbImage( int numRows, int numCols )
@@ -48,7 +51,30 @@ RgbImage::RgbImage( int numRows, int numCols )
 			*(c++) = 0;
 		}
 	}
+	ErrorCode = NoError;
 }
+/* *************************************************************************
+ * Copy constructor - also makes a copy of the bit image.
+ * Modified from code provided by William Joel (Western Connecticut State Univ.)
+   *************************************************************************/
+RgbImage::RgbImage(const RgbImage *image) {
+	NumCols = image->GetNumCols();
+	NumRows = image->GetNumRows();
+	long size = NumRows*GetNumBytesPerRow();
+	unsigned char *fromImage = image->ImagePtr;
+	ImagePtr = new unsigned char[size];
+	if ( !ImagePtr ) {
+		fprintf(stderr, "Unable to allocate memory for %ld x %ld bitmap.\n", 
+				NumCols, NumRows);
+		Reset();
+		ErrorCode = MemoryError;
+	}
+	for (long i=0; i < size; i++){
+		ImagePtr[i] = fromImage[i];
+	}
+	ErrorCode = NoError;
+}
+
 
 /* ********************************************************************
  *  LoadBmpFile
@@ -72,30 +98,22 @@ bool RgbImage::LoadBmpFile( const char* filename )
 	int bChar = fgetc( infile );
 	int mChar = fgetc( infile );
 	if ( bChar=='B' && mChar=='M' ) {			// If starts with "BM" for "BitMap"
-		skipChars(infile, 4 + 2 + 2);			// Skip 3 fields (size of file and two reserved fields)
-		int offset = readLong(infile);			// Offset to the bitmap table
-		int headerSize = readLong(infile);		// Size of the Bitmap header
+		skipChars( infile, 4+2+2+4+4 );			// Skip 4 fields we don't care about
 		NumCols = readLong( infile );
 		NumRows = readLong( infile );
-		skipChars( infile, 2 );					// Skip one field (number of color planes)
+		skipChars( infile, 2 );					// Skip one field
 		int bitsPerPixel = readShort( infile );
-		int bytesRead = 30;						// 2 + 4 + 2 + 2 + 4 + 4 + 4 + 4 + 2 + 2
-		int compressionMethod = BI_RGB;
-		if (headerSize >= 40) {
-			compressionMethod = readLong(infile);
-			bytesRead += 4;
-		}
-		skipChars(infile, offset - bytesRead);
+		skipChars( infile, 4+4+4+4+4+4 );		// Skip 6 more fields
 
 		if ( NumCols>0 && NumCols<=100000 && NumRows>0 && NumRows<=100000  
-			&& bitsPerPixel==24 && compressionMethod ==BI_RGB && !feof(infile) ) {
+			&& bitsPerPixel==24 && !feof(infile) ) {
 			fileFormatOK = true;
 		}
 	}
 	if ( !fileFormatOK ) {
 		Reset();
 		ErrorCode = FileFormatError;
-		fprintf(stderr, "Not a valid 24-bit, BI_RGB, bitmap file: %s.\n", filename);
+		fprintf(stderr, "Not a valid 24-bit bitmap file: %s.\n", filename);
 		fclose ( infile );
 		return false;
 	}
@@ -120,7 +138,7 @@ bool RgbImage::LoadBmpFile( const char* filename )
 			*cPtr = fgetc( infile );		// Red color value
 			cPtr += 3;
 		}
-		int k=3*NumCols;					// Num bytes already read
+		int k=3*j;							// Num bytes already read
 		for ( ; k<GetNumBytesPerRow(); k++ ) {
 			fgetc( infile );				// Read and ignore padding;
 			*(cPtr++) = 0;
@@ -134,6 +152,7 @@ bool RgbImage::LoadBmpFile( const char* filename )
 		return false;
 	}
 	fclose( infile );	// Close the file
+	ErrorCode = NoError;
 	return true;
 }
 
@@ -226,7 +245,7 @@ bool RgbImage::WriteBmpFile( const char* filename )
 			cPtr+=3;
 		}
 		// Pad row to word boundary
-		int k=3*NumCols;					// Num bytes already read
+		int k=3*j;							// Num bytes already read
 		for ( ; k<GetNumBytesPerRow(); k++ ) {
 			fputc( 0, outfile );				// Read and ignore padding;
 			cPtr++;
@@ -234,6 +253,7 @@ bool RgbImage::WriteBmpFile( const char* filename )
 	}
 
 	fclose( outfile );	// Close the file
+	ErrorCode = NoError;
 	return true;
 }
 
@@ -325,10 +345,10 @@ unsigned char RgbImage::doubleToUnsignedChar( double x )
 
 bool RgbImage::LoadFromOpenglBuffer()					// Load the bitmap from the current OpenGL buffer
 {
-	int viewportData[4];
+	GLint viewportData[4];
 	glGetIntegerv( GL_VIEWPORT, viewportData );
-	int& vWidth = viewportData[2];
-	int& vHeight = viewportData[3];
+	int vWidth = viewportData[2];
+	int vHeight = viewportData[3];
 	
 	if ( ImagePtr==0 ) { // If no memory allocated
 		NumRows = vHeight;
@@ -343,21 +363,57 @@ bool RgbImage::LoadFromOpenglBuffer()					// Load the bitmap from the current Op
 		}
 	}
 	assert ( vWidth>=NumCols && vHeight>=NumRows );
-	int oldGlRowLen;
-	if ( vWidth>=NumCols ) {
-		glGetIntegerv( GL_UNPACK_ROW_LENGTH, &oldGlRowLen );
-		glPixelStorei( GL_UNPACK_ROW_LENGTH, NumCols );
+	GLint oldGlRowLen;
+	if ( vWidth > NumCols ) {
+		glGetIntegerv( GL_PACK_ROW_LENGTH, &oldGlRowLen );
+		glPixelStorei( GL_PACK_ROW_LENGTH, NumCols );
 	}
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	glPixelStorei(GL_PACK_ALIGNMENT, 4);
 
 	// Get the frame buffer data.
 	glReadPixels( 0, 0, NumCols, NumRows, GL_RGB, GL_UNSIGNED_BYTE, ImagePtr);
 
 	// Restore the row length in glPixelStorei  (really ought to restore alignment too).
-	if ( vWidth>=NumCols ) {
-		glPixelStorei( GL_UNPACK_ROW_LENGTH, oldGlRowLen );
+	if ( vWidth > NumCols ) {
+		glPixelStorei( GL_PACK_ROW_LENGTH, oldGlRowLen );
 	}	
+	ErrorCode = NoError;
 	return true;
 }
 
-#endif   // RGBIMAGE_DONT_USE_OPENGL
+// Draw the bitmap into the current OpenGL buffer
+//    Always starts at the position (0,0).
+bool RgbImage::DrawToOpenglBuffer()	
+{
+	GLint viewportData[4];
+	glGetIntegerv( GL_VIEWPORT, viewportData );
+	int vWidth = viewportData[2];
+	int vHeight = viewportData[3];
+	
+	if ( !ImageLoaded() ) { // If no memory allocated
+		assert ( false && "RgbImage.cpp error: No RGB Image for DrawToOpenglBuffer()." );
+		ErrorCode = WriteError;
+		return false;
+	}
+
+	assert ( vWidth>=NumCols && vHeight>=NumRows );
+	GLint oldGlRowLen;			
+	if ( vWidth > NumCols ) {
+		glGetIntegerv( GL_UNPACK_ROW_LENGTH, &oldGlRowLen );
+		glPixelStorei( GL_UNPACK_ROW_LENGTH, NumCols );
+	}
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+	// Upload the frame buffer data.
+	glRasterPos2i(0,0);		// Position at base of window
+	glDrawPixels( NumCols, NumRows, GL_RGB, GL_UNSIGNED_BYTE, ImagePtr);
+
+	// Restore the row length in glPixelStorei  (really ought to restore alignment too).
+	if ( vWidth > NumCols ) {
+		glPixelStorei( GL_UNPACK_ROW_LENGTH, oldGlRowLen );
+	}	
+	ErrorCode = NoError;
+	return true;
+}
+
+#endif   // RGB_IMAGE_DONT_USE_OPENGL
