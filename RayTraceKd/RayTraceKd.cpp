@@ -87,7 +87,7 @@ bool RayTraceMode = false;		// Set true for RayTraciing,  false for rendering wi
 long NumScanLinesRayTraced = -1;
 long WidthRayTraced = -1;
 
-const double MAX_DIST = 50;	// Max. view distance
+// const double MAX_DIST = 50;	// Max. view distance
 
 SceneDescription* ActiveScene;
 
@@ -153,9 +153,9 @@ void RayTraceView(void)
 		for ( i=0; i<WindowWidth; i++) {
 			for ( j=0; j<WindowHeight; j++ ) {
 				//if ( i==15 && (j==91 || j==169) ) {
-				if ( i==16 && j==WindowHeight-106 ) {
-					int iii = 0;
-				}
+				// if ( i==16 && j==WindowHeight-106 ) {
+				// 	int iii = 0;
+				// }
 				//i = 15;
 				//j = 91;
 				//j = 169;

@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 CC = g++
-CPPFLAGS = -O3 -Wall
+CPPFLAGS = -O3 -Wall -Wno-deprecated-declarations
 MACFLAG = -framework GLUT -framework OpenGL -framework Cocoa
 LINUXFLAG = -lGL -lGLU -lglut
 
@@ -61,5 +61,5 @@ raytracekd.out: $(OBJ)
 	$(CC) $(FLAGS) $(OBJ) -o raytracekd.out
 
 clean: 
-	-rm out $(OBJ)
+	@rm $(OBJ) raytracekd.out 2>/dev/null || true
 

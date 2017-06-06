@@ -99,6 +99,8 @@ public:
 			Viewable_Triangle };
 	virtual ViewableType GetViewableType() const = 0;
 
+	virtual ~ViewableBase() {}
+
 protected:
 
 	const TextureMapBase* TextureFront;		// Front texture map

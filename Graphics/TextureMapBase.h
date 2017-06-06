@@ -45,6 +45,8 @@ public:
 	static void ReflectDirToCubeMap( const VectorR3& reflectDir, 
 										  VectorR2* cubeMapCoords );
 
+	virtual ~TextureMapBase() {}
+
 protected:
 
 };

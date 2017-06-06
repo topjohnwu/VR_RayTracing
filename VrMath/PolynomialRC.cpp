@@ -222,7 +222,7 @@ int PolySolveReal( int degree, double *coefs, double *roots )
 			(*(tptr++)) = *(fptr++);
 		}
 
-		delete work;
+		delete[] work;
 		return numRoots;
 	}
 }

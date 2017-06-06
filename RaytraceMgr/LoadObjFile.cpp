@@ -30,7 +30,7 @@
 #include "../Graphics/ViewableTriangle.h"
 
 const int numCommands = 4;
-char* commandList[numCommands] = 
+const char* commandList[numCommands] = 
 { 
 	"v",
 	"vt",
