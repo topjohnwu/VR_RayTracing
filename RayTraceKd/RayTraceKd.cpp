@@ -21,6 +21,7 @@
 #include <math.h>
 #include <limits.h>
 #include <stdio.h>
+#include <random>
 
 // If you do not have GLUT installed, you can use the basic GL routines instead.
 //   For this, include windows.h and GL/gl.h, instead of GL/glut.h
@@ -150,6 +151,9 @@ void RayTraceView(void)
 		MyStats.Init();
 		ObjectKdTree.ResetStats();
 		int TraceDepth = 3;
+		int superSampleNum = 16;
+		default_random_engine generator;
+		uniform_real_distribution<double> distribution(0.0,1.0);
 		for ( i=0; i<WindowWidth; i++) {
 			for ( j=0; j<WindowHeight; j++ ) {
 				//if ( i==15 && (j==91 || j==169) ) {
@@ -159,9 +163,16 @@ void RayTraceView(void)
 				//i = 15;
 				//j = 91;
 				//j = 169;
-				MainView.CalcPixelDirection(i,j,&PixelDir);
-				RayTrace( TraceDepth, MainView.GetPosition(), PixelDir, curPixelColor );
-				pixels->SetPixel(i,j,curPixelColor);
+				VectorR3 tempPixelColor;
+				for( int k = 0; k < superSampleNum; ++k) {
+					double x = i + distribution(generator);
+					double y = j + distribution(generator);
+					MainView.CalcPixelDirection(x,y,&PixelDir);
+					RayTrace( TraceDepth, MainView.GetPosition(), PixelDir, curPixelColor );
+					tempPixelColor += curPixelColor;
+				}
+				tempPixelColor /= superSampleNum;
+				pixels->SetPixel(i,j,tempPixelColor);
 			}
 		}
 		WidthRayTraced = WindowWidth;			// Set these values to show scene has been computed.
@@ -524,9 +535,9 @@ void InitializeSceneGeometry()
 
 // One of the following three lines should un-commented to select the way
 //		the scene is loaded into the SceneDescription.
-//#define MODE 1  /* Use this line to manually set the scene in RayTraceSetup2.cpp */
+#define MODE 1  /* Use this line to manually set the scene in RayTraceSetup2.cpp */
 //#define MODE 2  /* Use this line to load the scene data from an .obj file. */
-#define MODE 3  /* Use this line to load the scene data from a .nff file. */
+//#define MODE 3  /* Use this line to load the scene data from a .nff file. */
 #if MODE==1
 	SetUpScene2();
 	ActiveScene = &TheScene2;
