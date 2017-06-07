@@ -151,7 +151,8 @@ void RayTraceView(void)
 		MyStats.Init();
 		ObjectKdTree.ResetStats();
 		int TraceDepth = 3;
-		int superSampleNum = 16;
+		// int superSampleNum = 4;
+		int subPixelNum = 4;
 		default_random_engine generator;
 		uniform_real_distribution<double> distribution(0.0,1.0);
 		for ( i=0; i<WindowWidth; i++) {
@@ -164,14 +165,16 @@ void RayTraceView(void)
 				//j = 91;
 				//j = 169;
 				VectorR3 tempPixelColor;
-				for( int k = 0; k < superSampleNum; ++k) {
-					double x = i + distribution(generator);
-					double y = j + distribution(generator);
-					MainView.CalcPixelDirection(x,y,&PixelDir);
-					RayTrace( TraceDepth, MainView.GetPosition(), PixelDir, curPixelColor );
-					tempPixelColor += curPixelColor;
+				for( int k = 0; k < subPixelNum; ++k) {
+					for( int l = 0; l < subPixelNum; ++l) {
+						double x = i + (k + distribution(generator))/subPixelNum;
+						double y = j + (l + distribution(generator))/subPixelNum;
+						MainView.CalcPixelDirection(x,y,&PixelDir);
+						RayTrace( TraceDepth, MainView.GetPosition(), PixelDir, curPixelColor );
+						tempPixelColor += curPixelColor;						
+					}
 				}
-				tempPixelColor /= superSampleNum;
+				tempPixelColor /= (subPixelNum*subPixelNum);
 				pixels->SetPixel(i,j,tempPixelColor);
 			}
 		}
