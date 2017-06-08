@@ -58,6 +58,8 @@ public:
 							const VectorR3& N, const VectorR3& V, 
 							const VectorR3& L, const VectorR3* H ) const = 0;
 
+	double GetRoughness() const { return Roughness; }
+	void SetRoughness(double r) { Roughness = r; }
 
 	void SetColorAmbient( double r, double g, double b);
 	void SetColorDiffuse( double r, double g, double b);
@@ -106,6 +108,7 @@ protected:
 	VectorR3 ColorDiffuse;
 	VectorR3 ColorSpecular;
 	VectorR3 ColorEmissive;
+	double Roughness;
 
 public:
 	static bool CalcRefractDir( double indexOfRefraction, double indexOfRefractionInv,

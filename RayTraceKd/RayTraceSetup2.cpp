@@ -239,6 +239,35 @@ void SetUpMaterials() {
 	mat9->SetColorReflective( Mat9reflect );
 	mat9->SetShininess( Mat9shiny );
 
+	Material* mat10 = new Material;
+	TheScene2.AddMaterial(mat10);
+	mat10->SetColorAmbientDiffuse(VectorR3(0.7, 0.7, 0.7));
+	mat10->SetColorSpecular(VectorR3(0.8, 0.8, 0.8));
+	mat10->SetColorReflective(VectorR3(0.8, 0.8, 0.8));
+	mat10->SetShininess(160);
+	mat10->SetRoughness(0.001);
+
+	Material* mat11 = new Material;
+	TheScene2.AddMaterial(mat11);
+	mat11->SetColorAmbientDiffuse(VectorR3(0.7, 0.7, 0.7));
+	mat11->SetColorSpecular(VectorR3(0.8, 0.8, 0.8));
+	mat11->SetColorReflective(VectorR3(0.8, 0.8, 0.8));
+	mat11->SetShininess(160);
+	mat11->SetRoughness(0.01);
+
+	Material* mat12 = new Material;
+	TheScene2.AddMaterial(mat12);
+	mat12->SetColorAmbientDiffuse(VectorR3(0.7, 0.7, 0.7));
+	mat12->SetColorSpecular(VectorR3(0.8, 0.8, 0.8));
+	mat12->SetColorReflective(VectorR3(0.8, 0.8, 0.8));
+	mat12->SetShininess(160);
+	mat12->SetRoughness(0.05);
+
+// // A near perfect mirror
+// float Mat9spec[3] = {0.95f, 0.95f, 0.95f};
+// float Mat9nonspec[3] = {0.05f, 0.05f, 0.05f};
+// float Mat9reflect[3] = {0.95f, 0.95f, 0.95f};
+// float Mat9shiny = 160.0f;
 }
 
 void SetUpLights( SceneDescription& scene ) {
@@ -398,187 +427,208 @@ void SetUpViewableObjects() {
 	vs->SetCenter( 1.0, 0.5, -4.0 );
 	TheScene2.AddViewable( vs );
 
-	// Try out two test tori
+	// test roughness
 
-	ViewableTorus* vT = new ViewableTorus();
-	vT->SetCenter( -0.3, 0.6, 7.0 );
-	vT->SetMaterial( &TheScene2.GetMaterial(5) );
-	vT->SetRadii(0.6,0.15);
-	vT->SetAxis(VectorR3(0.0,1.0,1.0));
-	TheScene2.AddViewable( vT );
+	vs = new ViewableSphere;
+	vs->SetRadius(0.5);
+	vs->SetMaterial(&TheScene2.GetMaterial(10));
+	vs->SetCenter(-3, 0.5, 5);
+	TheScene2.AddViewable(vs);
 
-	vT = new ViewableTorus();
-	vT->SetCenter( 0.3, 0.6, 7.0 );
-	vT->SetMaterial( &TheScene2.GetMaterial(0) );
-	vT->SetRadii(0.6,0.15);
-	vT->SetAxis(VectorR3(0.0,1.0,-1.0));
-	TheScene2.AddViewable( vT );
+	vs = new ViewableSphere;
+	vs->SetRadius(0.5);
+	vs->SetMaterial(&TheScene2.GetMaterial(11));
+	vs->SetCenter(0, 0.5, 5);
+	TheScene2.AddViewable(vs);
 
-	// Upright right cylinder
-	VectorR3 firstCylCenter(-4.0,1.5,6.0);
-	ViewableCylinder* vcyl = new ViewableCylinder();
-	vcyl->SetCenter(firstCylCenter);
-	vcyl->SetCenterAxis(0.0,1.0,0.0); // The default
-	vcyl->SetHeight(3.0);
-	vcyl->SetRadius(0.25);
-	vcyl->SetMaterial( &TheScene2.GetMaterial(3) );
-	TheScene2.AddViewable( vcyl );
+	vs = new ViewableSphere;
+	vs->SetRadius(0.5);
+	vs->SetMaterial(&TheScene2.GetMaterial(12));
+	vs->SetCenter(3, 0.5, 5);
+	TheScene2.AddViewable(vs);
 
-	VectorR3 cylEndPt(-4.0,1.5,8.0);	// Common end pt. of diagonal cylinders
-	VectorR3 cylnormalA(1.0,0.0,0.0);
-	double coefA = cylnormalA^cylEndPt;
-	VectorR3 cylnormalB(0.0,-1.0,0.0);
-	vcyl = new ViewableCylinder();
-	vcyl->SetCenter(cylEndPt);
-	vcyl->SetCenterAxis(1.0,1.0,0.0);
-	vcyl->SetRadialAxes(VectorR3(0.0,0.0,1.0),VectorR3(1.0,-1.0,0.0));
-	vcyl->SetRadii(0.1,0.5);
-	vcyl->SetTopFace( cylnormalA, coefA );
-	vcyl->SetBottomFace( cylnormalB, 0.0 );
-	vcyl->SetMaterial( &TheScene2.GetMaterial(5) );
-	vcyl->SetMaterialTopInner( &TheScene2.GetMaterial(8) );
-	vcyl->SetMaterialTopOuter( &TheScene2.GetMaterial(8) );
-	TheScene2.AddViewable( vcyl );
 
-	vcyl = new ViewableCylinder();
-	vcyl->SetCenter(cylEndPt);
-	vcyl->SetCenterAxis(1.0,-1.0,0.0);
-	vcyl->SetRadialAxes(VectorR3(0.0,0.0,1.0),VectorR3(1.0,1.0,0.0));
-	vcyl->SetRadii(0.1,0.5);
-	vcyl->SetBottomFace( -cylnormalA, -coefA );
-	vcyl->SetTopFace( cylnormalB, 0.0 );
-	vcyl->SetMaterial( &TheScene2.GetMaterial(5) );
-	vcyl->SetMaterialTopInner( &TheScene2.GetMaterial(8) );
-	vcyl->SetMaterialTopOuter( &TheScene2.GetMaterial(8) );
-	TheScene2.AddViewable( vcyl );
+	// // Try out two test tori
 
-	vcyl = new ViewableCylinder();
-	vcyl->SetCenter(-4.0,0.2,8.0);
-	vcyl->SetCenterAxis(0.0,0.0,-1.0);
-	vcyl->SetRadialAxes(VectorR3(0.0,1.0,0.0),VectorR3(1.0,0.0,0.0));
-	vcyl->SetRadii(0.2,0.4);
-	vcyl->SetHeight(1.0);
-	vcyl->SetMaterial( &TheScene2.GetMaterial(3) );
-	TheScene2.AddViewable( vcyl );
-	TextureCheckered* txc3 = TheScene2.NewTextureCheckered();
-	txc3->SetMaterial1( &TheScene2.GetMaterial(4) );
-	txc3->SetWidths(0.125,0.25);
-	vcyl->TextureMap(txc3);	
+	// ViewableTorus* vT = new ViewableTorus();
+	// vT->SetCenter( -0.3, 0.6, 7.0 );
+	// vT->SetMaterial( &TheScene2.GetMaterial(5) );
+	// vT->SetRadii(0.6,0.15);
+	// vT->SetAxis(VectorR3(0.0,1.0,1.0));
+	// TheScene2.AddViewable( vT );
 
-	// Horizontal yellow ellipsoid
-	ViewableEllipsoid* ve = new ViewableEllipsoid();
-	ve->SetCenter(4.0,2.0,8.0);
-	ve->SetMaterial( &TheScene2.GetMaterial(0) );
-	ve->SetRadii(0.3,0.6,1.0);		// radii along y axis, z axis & x axis
-	TheScene2.AddViewable( ve );
-	// Diagonal purple and black ellipsoid
-	ve = new ViewableEllipsoid();
-	ve->SetCenter(4.0,1.0,9.0);
-	ve->SetAxes(VectorR3(1.0,1.0,0.0),VectorR3(0.0,0.0,1.0));
-	ve->SetRadii(0.5,0.2,0.8);
-	ve->SetMaterial( &TheScene2.GetMaterial(3) );
-	TheScene2.AddViewable( ve );
-	ve->TextureMap(txc2);
-	// Vertical, glass ellipsoid
-	ve = new ViewableEllipsoid();
-	ve->SetCenter(6.5,2.5,6.0);
-	ve->SetRadii(2.5,0.1,0.3);
-	ve->SetMaterial( &TheScene2.GetMaterial(5) );
-	TheScene2.AddViewable( ve );
+	// vT = new ViewableTorus();
+	// vT->SetCenter( 0.3, 0.6, 7.0 );
+	// vT->SetMaterial( &TheScene2.GetMaterial(0) );
+	// vT->SetRadii(0.6,0.15);
+	// vT->SetAxis(VectorR3(0.0,1.0,-1.0));
+	// TheScene2.AddViewable( vT );
 
-	// Cone
-	ViewableCone* vcone = new ViewableCone();
-	vcone->SetApex(3.0,1.0,6.0);
-	vcone->SetSlope(2.0);
-	vcone->SetMaterial( &TheScene2.GetMaterial(0) );
-	TheScene2.AddViewable( vcone );
+	// // Upright right cylinder
+	// VectorR3 firstCylCenter(-4.0,1.5,6.0);
+	// ViewableCylinder* vcyl = new ViewableCylinder();
+	// vcyl->SetCenter(firstCylCenter);
+	// vcyl->SetCenterAxis(0.0,1.0,0.0); // The default
+	// vcyl->SetHeight(3.0);
+	// vcyl->SetRadius(0.25);
+	// vcyl->SetMaterial( &TheScene2.GetMaterial(3) );
+	// TheScene2.AddViewable( vcyl );
 
-	vcone = new ViewableCone();
-	vcone->SetApex(3.0, 0.0, 9.0);
-	vcone->SetCenterAxis(6.0,-1.0,0.0);
-	vcone->SetRadialAxis(VectorR3(0.0,0.0,1.0));
-	vcone->SetSlopes(1.0, 6.0);
-	vcone->SetMaterial( &TheScene2.GetMaterial(3) );
-	vcone->TextureMap(txc2);
-	TheScene2.AddViewable( vcone );
+	// VectorR3 cylEndPt(-4.0,1.5,8.0);	// Common end pt. of diagonal cylinders
+	// VectorR3 cylnormalA(1.0,0.0,0.0);
+	// double coefA = cylnormalA^cylEndPt;
+	// VectorR3 cylnormalB(0.0,-1.0,0.0);
+	// vcyl = new ViewableCylinder();
+	// vcyl->SetCenter(cylEndPt);
+	// vcyl->SetCenterAxis(1.0,1.0,0.0);
+	// vcyl->SetRadialAxes(VectorR3(0.0,0.0,1.0),VectorR3(1.0,-1.0,0.0));
+	// vcyl->SetRadii(0.1,0.5);
+	// vcyl->SetTopFace( cylnormalA, coefA );
+	// vcyl->SetBottomFace( cylnormalB, 0.0 );
+	// vcyl->SetMaterial( &TheScene2.GetMaterial(5) );
+	// vcyl->SetMaterialTopInner( &TheScene2.GetMaterial(8) );
+	// vcyl->SetMaterialTopOuter( &TheScene2.GetMaterial(8) );
+	// TheScene2.AddViewable( vcyl );
+
+	// vcyl = new ViewableCylinder();
+	// vcyl->SetCenter(cylEndPt);
+	// vcyl->SetCenterAxis(1.0,-1.0,0.0);
+	// vcyl->SetRadialAxes(VectorR3(0.0,0.0,1.0),VectorR3(1.0,1.0,0.0));
+	// vcyl->SetRadii(0.1,0.5);
+	// vcyl->SetBottomFace( -cylnormalA, -coefA );
+	// vcyl->SetTopFace( cylnormalB, 0.0 );
+	// vcyl->SetMaterial( &TheScene2.GetMaterial(5) );
+	// vcyl->SetMaterialTopInner( &TheScene2.GetMaterial(8) );
+	// vcyl->SetMaterialTopOuter( &TheScene2.GetMaterial(8) );
+	// TheScene2.AddViewable( vcyl );
+
+	// vcyl = new ViewableCylinder();
+	// vcyl->SetCenter(-4.0,0.2,8.0);
+	// vcyl->SetCenterAxis(0.0,0.0,-1.0);
+	// vcyl->SetRadialAxes(VectorR3(0.0,1.0,0.0),VectorR3(1.0,0.0,0.0));
+	// vcyl->SetRadii(0.2,0.4);
+	// vcyl->SetHeight(1.0);
+	// vcyl->SetMaterial( &TheScene2.GetMaterial(3) );
+	// TheScene2.AddViewable( vcyl );
+	// TextureCheckered* txc3 = TheScene2.NewTextureCheckered();
+	// txc3->SetMaterial1( &TheScene2.GetMaterial(4) );
+	// txc3->SetWidths(0.125,0.25);
+	// vcyl->TextureMap(txc3);	
+
+	// // Horizontal yellow ellipsoid
+	// ViewableEllipsoid* ve = new ViewableEllipsoid();
+	// ve->SetCenter(4.0,2.0,8.0);
+	// ve->SetMaterial( &TheScene2.GetMaterial(0) );
+	// ve->SetRadii(0.3,0.6,1.0);		// radii along y axis, z axis & x axis
+	// TheScene2.AddViewable( ve );
+	// // Diagonal purple and black ellipsoid
+	// ve = new ViewableEllipsoid();
+	// ve->SetCenter(4.0,1.0,9.0);
+	// ve->SetAxes(VectorR3(1.0,1.0,0.0),VectorR3(0.0,0.0,1.0));
+	// ve->SetRadii(0.5,0.2,0.8);
+	// ve->SetMaterial( &TheScene2.GetMaterial(3) );
+	// TheScene2.AddViewable( ve );
+	// ve->TextureMap(txc2);
+	// // Vertical, glass ellipsoid
+	// ve = new ViewableEllipsoid();
+	// ve->SetCenter(6.5,2.5,6.0);
+	// ve->SetRadii(2.5,0.1,0.3);
+	// ve->SetMaterial( &TheScene2.GetMaterial(5) );
+	// TheScene2.AddViewable( ve );
+
+	// // Cone
+	// ViewableCone* vcone = new ViewableCone();
+	// vcone->SetApex(3.0,1.0,6.0);
+	// vcone->SetSlope(2.0);
+	// vcone->SetMaterial( &TheScene2.GetMaterial(0) );
+	// TheScene2.AddViewable( vcone );
+
+	// vcone = new ViewableCone();
+	// vcone->SetApex(3.0, 0.0, 9.0);
+	// vcone->SetCenterAxis(6.0,-1.0,0.0);
+	// vcone->SetRadialAxis(VectorR3(0.0,0.0,1.0));
+	// vcone->SetSlopes(1.0, 6.0);
+	// vcone->SetMaterial( &TheScene2.GetMaterial(3) );
+	// vcone->TextureMap(txc2);
+	// TheScene2.AddViewable( vcone );
 	
-	vcone = new ViewableCone();
-	vcone->SetApex(5.0, 1.0, 9.2);
-	vcone->SetCenterAxis(1.0,2.0,0.0);
-	vcone->SetSlopes(4.0, 4.0);
-	vcone->SetBaseFace(VectorR3(0.0,-1.0,0.0), -0.01);
-	vcone->SetMaterial( &TheScene2.GetMaterial(5) );
-	vcone->SetMaterialBaseInner( &TheScene2.GetMaterial(3) );
-	TheScene2.AddViewable( vcone );
+	// vcone = new ViewableCone();
+	// vcone->SetApex(5.0, 1.0, 9.2);
+	// vcone->SetCenterAxis(1.0,2.0,0.0);
+	// vcone->SetSlopes(4.0, 4.0);
+	// vcone->SetBaseFace(VectorR3(0.0,-1.0,0.0), -0.01);
+	// vcone->SetMaterial( &TheScene2.GetMaterial(5) );
+	// vcone->SetMaterialBaseInner( &TheScene2.GetMaterial(3) );
+	// TheScene2.AddViewable( vcone );
 
-	vcone = new ViewableCone();
-	vcone->SetApex(5.0, 1.0, 9.2);
-	vcone->SetCenterAxis(-1.0,2.0,0.0);
-	vcone->SetSlopes(4.0, 4.0);
-	vcone->SetBaseFace(VectorR3(0.0,-1.0,0.0), -0.01);
-	vcone->SetMaterial( &TheScene2.GetMaterial(5) );
-	vcone->SetMaterialBaseInner( &TheScene2.GetMaterial(3) );
-	TheScene2.AddViewable( vcone );
+	// vcone = new ViewableCone();
+	// vcone->SetApex(5.0, 1.0, 9.2);
+	// vcone->SetCenterAxis(-1.0,2.0,0.0);
+	// vcone->SetSlopes(4.0, 4.0);
+	// vcone->SetBaseFace(VectorR3(0.0,-1.0,0.0), -0.01);
+	// vcone->SetMaterial( &TheScene2.GetMaterial(5) );
+	// vcone->SetMaterialBaseInner( &TheScene2.GetMaterial(3) );
+	// TheScene2.AddViewable( vcone );
 
-	// Yellow cube
-	ViewableParallelepiped* vpiped = new ViewableParallelepiped();
-	vpiped->SetVertices(VectorR3(-6.0,6.0,4.0), VectorR3(-5.0,6.0,4.0),
-						VectorR3(-6.0,7.0,4.0), VectorR3(-6.0,6.0,3.0) );
-	vpiped->SetMaterialOuter( &TheScene2.GetMaterial(0) );
-	TheScene2.AddViewable( vpiped );
+	// // Yellow cube
+	// ViewableParallelepiped* vpiped = new ViewableParallelepiped();
+	// vpiped->SetVertices(VectorR3(-6.0,6.0,4.0), VectorR3(-5.0,6.0,4.0),
+	// 					VectorR3(-6.0,7.0,4.0), VectorR3(-6.0,6.0,3.0) );
+	// vpiped->SetMaterialOuter( &TheScene2.GetMaterial(0) );
+	// TheScene2.AddViewable( vpiped );
 
-	// Red & Black checked parallelpiped
-	vpiped = new ViewableParallelepiped();
-	vpiped->SetVertices(VectorR3(-6.6,6.0,4.5), VectorR3(-6.6,1.0,5.0),
-						VectorR3(-6.6,5.5,6.0), VectorR3(-6.3,5.5,4.5) );
-	vpiped->SetMaterialOuter( &TheScene2.GetMaterial(3) );
-	TheScene2.AddViewable( vpiped );
+	// // Red & Black checked parallelpiped
+	// vpiped = new ViewableParallelepiped();
+	// vpiped->SetVertices(VectorR3(-6.6,6.0,4.5), VectorR3(-6.6,1.0,5.0),
+	// 					VectorR3(-6.6,5.5,6.0), VectorR3(-6.3,5.5,4.5) );
+	// vpiped->SetMaterialOuter( &TheScene2.GetMaterial(3) );
+	// TheScene2.AddViewable( vpiped );
 
-	// A black checker pattern (superimposed on whatever other material is used)
-	TextureCheckered* txc4 = TheScene2.NewTextureCheckered();
-	txc4->SetMaterial1( &TheScene2.GetMaterial(4) );	// black
-	txc4->SetWidths(0.0625,0.0625);
+	// // A black checker pattern (superimposed on whatever other material is used)
+	// TextureCheckered* txc4 = TheScene2.NewTextureCheckered();
+	// txc4->SetMaterial1( &TheScene2.GetMaterial(4) );	// black
+	// txc4->SetWidths(0.0625,0.0625);
 
-	// Bezier patch for testing
-	double cx=-1.5;
-	double cy=1.0;
-	double cr = 1.0;
-	double cz=7.0;
-	// Order 3 x 3 rational Bezier patch
-	double cntlPtsA[3][3][4] = {
-		{ {cx-cr,cy,cz,1}, {0, 0 ,cr,0}, {cx+cr,cy,cz,1} },
-		{ {cx-cr*0.5,cy+0.5,cz,1}, {0, 0 ,cr*0.5,0}, {cx+cr*0.5,cy+0.5,cz,1} },
-		{ {cx-cr,cy+1,cz,1}, {0, 0 ,cr,0}, {cx+cr,cy+1,cz,1} }
-	};
-	double cntlPtsB[3][3][4] = {
-		{ {cx+cr,cy,cz,1}, {0, 0 ,-cr,0}, {cx-cr,cy,cz,1} },
-		{ {cx+cr*0.5,cy+0.5,cz,1}, {0, 0 ,-cr*0.5,0}, {cx-cr*0.5,cy+0.5,cz,1} },
-		{ {cx+cr,cy+1,cz,1}, {0, 0 ,-cr,0}, {cx-cr,cy+1,cz,1} }
-	};
-	ViewableBezierSet* vBezierSet = new ViewableBezierSet();
-	vBezierSet->SetMaterialFront(  &TheScene2.GetMaterial(0) );	// Reflective greenish yellow
-	vBezierSet->SetMaterialBack(  &TheScene2.GetMaterial(3) );		// Magenta-ish
-	vBezierSet->TextureMapBack( txc4 );
-	vBezierSet->AddRationalPatch(3,3,&cntlPtsA[0][0][0]);
-	vBezierSet->AddRationalPatch(3,3,&cntlPtsB[0][0][0]);
-	TheScene2.AddViewable( vBezierSet );
+	// // Bezier patch for testing
+	// double cx=-1.5;
+	// double cy=1.0;
+	// double cr = 1.0;
+	// double cz=7.0;
+	// // Order 3 x 3 rational Bezier patch
+	// double cntlPtsA[3][3][4] = {
+	// 	{ {cx-cr,cy,cz,1}, {0, 0 ,cr,0}, {cx+cr,cy,cz,1} },
+	// 	{ {cx-cr*0.5,cy+0.5,cz,1}, {0, 0 ,cr*0.5,0}, {cx+cr*0.5,cy+0.5,cz,1} },
+	// 	{ {cx-cr,cy+1,cz,1}, {0, 0 ,cr,0}, {cx+cr,cy+1,cz,1} }
+	// };
+	// double cntlPtsB[3][3][4] = {
+	// 	{ {cx+cr,cy,cz,1}, {0, 0 ,-cr,0}, {cx-cr,cy,cz,1} },
+	// 	{ {cx+cr*0.5,cy+0.5,cz,1}, {0, 0 ,-cr*0.5,0}, {cx-cr*0.5,cy+0.5,cz,1} },
+	// 	{ {cx+cr,cy+1,cz,1}, {0, 0 ,-cr,0}, {cx-cr,cy+1,cz,1} }
+	// };
+	// ViewableBezierSet* vBezierSet = new ViewableBezierSet();
+	// vBezierSet->SetMaterialFront(  &TheScene2.GetMaterial(0) );	// Reflective greenish yellow
+	// vBezierSet->SetMaterialBack(  &TheScene2.GetMaterial(3) );		// Magenta-ish
+	// vBezierSet->TextureMapBack( txc4 );
+	// vBezierSet->AddRationalPatch(3,3,&cntlPtsA[0][0][0]);
+	// vBezierSet->AddRationalPatch(3,3,&cntlPtsB[0] [0][0]);
+	// TheScene2.AddViewable( vBezierSet );
 
-	// Curved circular bezier patch, mirror in corner
-	cx = 8.0;
-	cz = -5.0;
-	cy = 5.0;
-	cr = 1.0;
-	double s2i = 1.0/sqrt(2.0);
-	double cntlPtsC[4][3][4] = {
-		{ {cx-cr, cy-1.0, cz, 1}, {s2i*(cx-cr), s2i*(cy-1.0), s2i*(cz+cr), s2i}, {cx, cy-1.0, cz+cr, 1} },
-		{ {cx-1.5*cr, cy, cz, 1}, {s2i*(cx-1.5*cr), s2i*(cy), s2i*(cz+1.5*cr), s2i}, {cx,cy, cz+1.5*cr, 1} },
-		{ {cx-1.6*cr, cy+0.5, cz, 1}, {s2i*(cx-1.6*cr), s2i*(cy+0.5), s2i*(cz+1.6*cr), s2i}, {cx,cy+0.5, cz+1.6*cr, 1} },
-		{ {cx-cr, cy+1.0, cz, 1}, {s2i*(cx-cr), s2i*(cy+1.0), s2i*(cz+cr), s2i}, {cx,cy+1.0, cz+cr, 1} },
-	};
-	vBezierSet = new ViewableBezierSet();
-	vBezierSet->SetMaterialFront( &TheScene2.GetMaterial(9) );	// near perfect mirror
-	vBezierSet->SetMaterialBack(  &TheScene2.GetMaterial(4) );	// black
-	vBezierSet->AddRationalPatch(3,4,&cntlPtsC[0][0][0]);
-	TheScene2.AddViewable( vBezierSet );
+	// // Curved circular bezier patch, mirror in corner
+	// cx = 8.0;
+	// cz = -5.0;
+	// cy = 5.0;
+	// cr = 1.0;
+	// double s2i = 1.0/sqrt(2.0);
+	// double cntlPtsC[4][3][4] = {
+	// 	{ {cx-cr, cy-1.0, cz, 1}, {s2i*(cx-cr), s2i*(cy-1.0), s2i*(cz+cr), s2i}, {cx, cy-1.0, cz+cr, 1} },
+	// 	{ {cx-1.5*cr, cy, cz, 1}, {s2i*(cx-1.5*cr), s2i*(cy), s2i*(cz+1.5*cr), s2i}, {cx,cy, cz+1.5*cr, 1} },
+	// 	{ {cx-1.6*cr, cy+0.5, cz, 1}, {s2i*(cx-1.6*cr), s2i*(cy+0.5), s2i*(cz+1.6*cr), s2i}, {cx,cy+0.5, cz+1.6*cr, 1} },
+	// 	{ {cx-cr, cy+1.0, cz, 1}, {s2i*(cx-cr), s2i*(cy+1.0), s2i*(cz+cr), s2i}, {cx,cy+1.0, cz+cr, 1} },
+	// };
+	// vBezierSet = new ViewableBezierSet();
+	// vBezierSet->SetMaterialFront( &TheScene2.GetMaterial(9) );	// near perfect mirror
+	// vBezierSet->SetMaterialBack(  &TheScene2.GetMaterial(4) );	// black
+	// vBezierSet->AddRationalPatch(3,4,&cntlPtsC[0][0][0]);
+	// TheScene2.AddViewable( vBezierSet );
 }
 

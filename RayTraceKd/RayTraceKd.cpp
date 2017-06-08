@@ -72,6 +72,9 @@ static void ResizeWindow(int w, int h);
 
 GlutRenderer* glutDraw = 0;
 
+default_random_engine generator;
+uniform_real_distribution<double> distribution(0.0,1.0);
+
 // ***********************Statistics************
 RayTraceStats MyStats;
 // **********************************************
@@ -153,8 +156,8 @@ void RayTraceView(void)
 		int TraceDepth = 3;
 		// int superSampleNum = 4;
 		int subPixelNum = 4;
-		default_random_engine generator;
-		uniform_real_distribution<double> distribution(0.0,1.0);
+		// default_random_engine generator;
+		// uniform_real_distribution<double> distribution(0.0,1.0);
 		for ( i=0; i<WindowWidth; i++) {
 			for ( j=0; j<WindowHeight; j++ ) {
 				//if ( i==15 && (j==91 || j==169) ) {
@@ -345,6 +348,18 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 				nextDir *= -2.0*(dir^visPoint.GetNormal());
 				nextDir += dir;
 				nextDir.ReNormalize();	// Just in case...
+				double roughness = thisMat->GetRoughness();
+				if(roughness > 0.0000001) {
+					VectorR3 u = (nextDir.x < nextDir.y) ? VectorR3(1,0,0) : VectorR3(0,1,0);
+					u *= nextDir;
+					u.Normalize();
+					VectorR3 v = u * nextDir;
+					v.Normalize();
+					normal_distribution<double> distribution(0.0,roughness);
+					nextDir += (u * distribution(generator) + v * distribution(generator));
+					nextDir.Normalize();
+				}
+
 				VectorR3 c = thisMat->GetReflectionColor(visPoint, -dir, nextDir);
 				RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, intersectNum);
 				moreColor.x *= c.x;
@@ -356,6 +371,18 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 			// Ray Trace Transmission
 			if ( thisMat->IsTransmissive() ) {
 				if ( thisMat->CalcRefractDir(visPoint.GetNormal(),dir, nextDir) ) {
+					double roughness = thisMat->GetRoughness();
+					if(roughness > 0.0000001) {
+						VectorR3 u = (nextDir.x < nextDir.y) ? VectorR3(1,0,0) : VectorR3(0,1,0);
+						u *= nextDir;
+						u.Normalize();
+						VectorR3 v = u * nextDir;
+						v.Normalize();
+						normal_distribution<double> distribution(0.0,thisMat->GetRoughness());
+						nextDir += (u * distribution(generator) + v * distribution(generator));
+						nextDir.Normalize();
+					}
+
 					VectorR3 c = thisMat->GetTransmissionColor(visPoint, -dir, nextDir);
 					RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, intersectNum);
 					moreColor.x *= c.x;
