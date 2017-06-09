@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 CC = g++
-CPPFLAGS = -O3 -Wall -Wno-deprecated-declarations
+CPPFLAGS = -O3 -Wall -Wno-deprecated-declarations -std=c++11
 MACFLAG = -framework GLUT -framework OpenGL -framework Cocoa
 LINUXFLAG = -lGL -lGLU -lglut
 

@@ -21,7 +21,11 @@
 #include <math.h>
 #include <limits.h>
 #include <stdio.h>
+
+// C++ STL headers
 #include <random>
+#include <thread>
+#include <mutex>
 
 // If you do not have GLUT installed, you can use the basic GL routines instead.
 //   For this, include windows.h and GL/gl.h, instead of GL/glut.h
@@ -48,7 +52,6 @@
 #include "../VrMath/MathMisc.h"
 #include "../OpenglRender/GlutRenderer.h"
 #include "../DataStructs/KdTree.h"
-#include "../DataStructs/KdData.h"
 #include "../RaytraceMgr/LoadNffFile.h"
 #include "../RaytraceMgr/LoadObjFile.h"
 #include "../RaytraceMgr/SceneDescription.h"
@@ -141,44 +144,75 @@ void myBuildKdTree()
 //	Calls RayTrace() for each one.
 // *****************************************************************
 
+class PixelWindow{
+public:
+	PixelWindow(int i, int j) :
+	x(0), y(0), width(i), height(j) {}
+
+	bool getNext(int &i, int &j) {
+		lock.lock();
+		bool ret = true;
+		if (x < width) {
+			i = x++;
+			j = y;
+		} else if (y < height - 1) {
+			i = x = 0;
+			j = ++y;
+		} else {
+			ret = false;
+		}
+		lock.unlock();
+		return ret;
+	}
+private:
+	int x, y;
+	int width, height;
+	mutex lock;
+};
+
+#define subPixelNum 4
+#define traceDepth 3
+#define THREAD_NUM thread::hardware_concurrency()
+// #define THREAD_NUM 1
+
+/******************************** 
+  TODO: Implement features here
+*********************************/
+static void tracePixel(PixelWindow *Window, const CameraView *MainView) {
+	VectorR3 PixelDir;
+	VectorR3 curPixelColor, tempPixelColor;
+	int i, j;
+	while (Window->getNext(i, j)) {
+		for( int k = 0; k < subPixelNum; ++k) {
+			for( int l = 0; l < subPixelNum; ++l) {
+				double x = i + (k + distribution(generator))/subPixelNum;
+				double y = j + (l + distribution(generator))/subPixelNum;
+				MainView->CalcPixelDirection(x,y,&PixelDir);
+				RayTrace( traceDepth, MainView->GetPosition(), PixelDir, curPixelColor );
+				tempPixelColor += curPixelColor;
+			}
+		}
+		tempPixelColor /= (subPixelNum*subPixelNum);
+		pixels->SetPixel(i, j, tempPixelColor);
+	}
+}
+
 void RayTraceView(void)
 {
-	int i,j;
-	VectorR3 PixelDir;
-	VisiblePoint visPoint;
-	VectorR3 curPixelColor;		// Accumulator for Pixel Color
-
-	const CameraView& MainView = ActiveScene->GetCameraView();
-
 	if ( WidthRayTraced!=WindowWidth || NumScanLinesRayTraced!=WindowHeight ) {  
 		// Do the rendering here
 		MyStats.Init();
 		ObjectKdTree.ResetStats();
-		int TraceDepth = 3;
-		int subPixelNum = 4;
-		for ( i=0; i<WindowWidth; i++) {
-			for ( j=0; j<WindowHeight; j++ ) {
-				//if ( i==15 && (j==91 || j==169) ) {
-				// if ( i==16 && j==WindowHeight-106 ) {
-				// 	int iii = 0;
-				// }
-				//i = 15;
-				//j = 91;
-				//j = 169;
-				VectorR3 tempPixelColor;
-				for( int k = 0; k < subPixelNum; ++k) {
-					for( int l = 0; l < subPixelNum; ++l) {
-						double x = i + (k + distribution(generator))/subPixelNum;
-						double y = j + (l + distribution(generator))/subPixelNum;
-						MainView.CalcPixelDirection(x,y,&PixelDir);
-						RayTrace( TraceDepth, MainView.GetPosition(), PixelDir, curPixelColor );
-						tempPixelColor += curPixelColor;						
-					}
-				}
-				tempPixelColor /= (subPixelNum*subPixelNum);
-				pixels->SetPixel(i,j,tempPixelColor);
-			}
-		}
+
+		thread threads[THREAD_NUM];
+		PixelWindow Window(WindowWidth, WindowHeight);
+
+		for (thread &t : threads)
+			t = thread(tracePixel, &Window, &ActiveScene->GetCameraView());
+
+		for (thread &t : threads)
+			t.join();
+
 		WidthRayTraced = WindowWidth;			// Set these values to show scene has been computed.
 		NumScanLinesRayTraced = WindowHeight;
 		MyStats.GetKdRunData( ObjectKdTree );
@@ -268,10 +302,10 @@ long SeekIntersectionKd( KdData *data, const VectorR3& pos, const VectorR3& dire
 	data->kdStartPosAvoid = pos;
 	data->kdStartPosAvoid.AddScaled( direction, data->isectEpsilon );
 	data->bestHitPoint = &returnedPoint;
+	data->CallbackFunction = (void*) potHitSeekIntersection;
+	data->UseListCallback = false;
 	
-	// printf("%ld\n", data->bestObject);
-	// data->bestObject = -1;
-	ObjectKdTree.Traverse( data, pos, direction, *potHitSeekIntersection );
+	ObjectKdTree.Traverse( data, pos, direction );
 
 	if ( data->bestObject>=0 ) {
 		*hitDist = data->bestHitDistance;
@@ -299,7 +333,10 @@ bool ShadowFeelerKd(KdData *data, const VectorR3& pos, const Light& light, long 
 	data->kdTraverseFeeler = true;		// True indicates no shadowing objects
 	data->kdTraverseAvoid = intersectNum;
 	data->kdShadowDist = dist;
-	ObjectKdTree.Traverse( data, light.GetPosition(), data->kdTraverseDir, potHitShadowFeeler, dist, true );
+	data->CallbackFunction = (void*) potHitShadowFeeler;
+	data->UseListCallback = false;
+
+	ObjectKdTree.Traverse( data, light.GetPosition(), data->kdTraverseDir, dist, true );
 
 	return data->kdTraverseFeeler;	// Return whether ray is free of shadowing objects
 }

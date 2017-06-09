@@ -37,9 +37,11 @@
 #include "../DataStructs/Array.h"
 #include "../DataStructs/Stack.h"
 #include "../VrMath/Aabb.h"
-#include "KdData.h"
+#include "../Graphics/ViewableBase.h"
+
 class RayTraceStats;	// Statistics for KdTree traversal
 
+class KdData;
 class KdTree;			// kd-tree.
 class KdTreeNode;		// A single node in the kd-tree.
 
@@ -96,10 +98,7 @@ public:
 	//	 startPos - beginning of the ray.
 	//	 dir - direction of the ray.
 	//   Returns "true" if traversal aborted by the callback function returning "true"
-	bool Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, 
-					PotentialObjectCallback* pocFunc, double seekDistance = 0.0, bool useSeekDistance = false );
-	bool Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, 
-					PotentialObjectsListCallback* polcFunc, double seekDistance = 0.0, bool useSeekDistance = false );
+	bool Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, double seekDistance = 0.0, bool useSeekDistance = false );
 
 	// ******** Accessors ****************
 	const KdTreeNode& GetNode( long i ) const;
@@ -109,9 +108,6 @@ public:
 	void Stats_NodeTraversed();
 	void Stats_LeafTraversed();
 	void Stats_GetAll( long* numNodes, long* numNonEmptyLeaves, long* numObjsInLeaves ) const;
-
-private:
-	bool Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, double seekDistance = 0.0, bool useSeekDistance = false );
 
 public:
 	// ****** Tree building routines *******
@@ -160,15 +156,10 @@ private:
 
 	AABB BoundingBox;			// An AABB that encloses the entire tree
 
-	// Traversal helper data
-	bool UseListCallback;		// True for the "List" callback traversal
-	void* CallbackFunction;		// Either PotentialObjectCallback* or PotentialObjectsListCallback*
-
 	// Traversal statistics
 	long Stats_NumberKdNodesTraversed;
 	long Stats_NumberKdLeavesTraversed;
 	long Stats_NumberKdObjectsInLeaves;
-
 
 	// Following items are used only while building the tree.
 	enum SplitAlgorithmType {
@@ -253,6 +244,29 @@ private:
 
 // See the end of this file for the inlined members of KdTree.
 
+// ************************************************************************************
+// KdData																			  *
+// ************************************************************************************
+class KdData {
+public:
+	KdData() 
+	: isectEpsilon(1.0e-6), bestObject(-1), bestHitDistance(DBL_MAX) {}
+	bool kdTraverseFeeler;
+	double isectEpsilon;
+	long bestObject;
+	long kdTraverseAvoid;
+	double bestHitDistance;
+	double kdShadowDist;
+	VisiblePoint tempPoint;
+	VisiblePoint* bestHitPoint;
+	VectorR3 kdStartPos;
+	VectorR3 kdStartPosAvoid;
+	VectorR3 kdTraverseDir;
+
+	// Traversal helper data
+	bool UseListCallback;		// True for the "List" callback traversal
+	void* CallbackFunction;		// Either PotentialObjectCallback* or PotentialObjectsListCallback*
+};
 
 // ************************************************************************************
 // KdTreeNode																		  *

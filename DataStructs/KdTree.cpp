@@ -35,8 +35,6 @@
 #include "KdTree.h"
 #include "DoubleRecurse.h"
 
-Stack<Kd_TraverseNodeData> traverseStack;
-
 // Destructor
 KdTree::~KdTree()
 {
@@ -76,24 +74,6 @@ KdTree::~KdTree()
 //	 startPos - beginning of the ray.
 //	 dir - direction of the ray.
 //   Returns "true" if traversal aborted by the callback function returning "true"
-bool KdTree::Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, 
-				PotentialObjectCallback* pocFunc, double seekDistance, bool obeySeekDistance  )
-{
-	CallbackFunction = (void*) pocFunc;
-	UseListCallback = false;
-
-	return Traverse( data, startPos, dir, seekDistance, obeySeekDistance );
-}
-
-bool KdTree::Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, 
-				PotentialObjectsListCallback* polcFunc, double seekDistance, bool obeySeekDistance  )
-{
-	CallbackFunction = (void*) polcFunc;
-	UseListCallback = true;
-
-	return Traverse( data, startPos, dir, seekDistance, obeySeekDistance );
-}
-
 bool KdTree::Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, double seekDistance, bool obeySeekDistance )
 {
 	double entryDist, exitDist;
@@ -140,6 +120,7 @@ bool KdTree::Traverse( KdData *data, const VectorR3& startPos, const VectorR3& d
 		maxDistance = seekDistance;
 	}
 	assert ( minDistance<=maxDistance );
+	Stack<Kd_TraverseNodeData> traverseStack;
 	traverseStack.Reset();
 
 	while ( true ) {
@@ -245,12 +226,12 @@ bool KdTree::Traverse( KdData *data, const VectorR3& startPos, const VectorR3& d
 		else {
 			// Handle leaf nodes by invoking the callback function
 			Stats_LeafTraversed();
-			if ( UseListCallback ) {
+			if ( data->UseListCallback ) {
 				// Pass whole list of objects back to the user
 				bool stopFlag;
 				double newStopDist;
 				Stats_ObjectsInLeaves( currentNode->Data.Leaf.NumObjects );
-				stopFlag = (*((PotentialObjectsListCallback*)CallbackFunction))(
+				stopFlag = (*((PotentialObjectsListCallback*)data->CallbackFunction))(
 										data,
 										currentNode->Data.Leaf.NumObjects, 
 										currentNode->Data.Leaf.ObjectList, 
@@ -267,7 +248,7 @@ bool KdTree::Traverse( KdData *data, const VectorR3& startPos, const VectorR3& d
 				Stats_ObjectsInLeaves( i );
 				long* objectIdPtr = currentNode->Data.Leaf.ObjectList;
 				for ( ; i>0; i-- ) {
-					if ( (*((PotentialObjectCallback*)CallbackFunction))( 
+					if ( (*((PotentialObjectCallback*)data->CallbackFunction))(
 												data, *objectIdPtr, &newStopDist )  )  
 					{
 						stopDistanceActive = true;
