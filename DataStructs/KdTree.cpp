@@ -150,6 +150,7 @@ bool KdTree::Traverse( KdData *data, const VectorR3& startPos, const VectorR3& d
 				thisStartPt = startPos.z;
 				break;
 			case KD_LEAF:
+			default:
 				assert (0);		// Included to make gcc compiler happy.
 			}
 			long nearNodeIdx;
@@ -591,7 +592,6 @@ void KdTree::CalcBestSplit( const AABB& aabb, const VectorR3& deltaBox, double t
 	}
 
 	// Try each of the three axes in turn.
-	bool foundBetter = false;
 	double bestCostSoFar = totalObjectCost; 
 	if ( CalcBestSplit( totalObjectCost, costToBeat, xExtents, 
 						aabb.GetMinX(), aabb.GetMaxX(), deltaBox.y, deltaBox.z,
@@ -599,7 +599,6 @@ void KdTree::CalcBestSplit( const AABB& aabb, const VectorR3& deltaBox, double t
 						numTriplesToLeft, numObjectsToLeft, numObjectsToRight,
 						costObjectsToLeft, costObjectsToRight ) )
 	{
-		foundBetter = true;
 		*splitAxisID = KD_SPLIT_X;
 		costToBeat = bestCostSoFar;
 	}
@@ -609,7 +608,6 @@ void KdTree::CalcBestSplit( const AABB& aabb, const VectorR3& deltaBox, double t
 						numTriplesToLeft, numObjectsToLeft, numObjectsToRight,
 						costObjectsToLeft, costObjectsToRight ) )
 	{
-		foundBetter = true;
 		*splitAxisID = KD_SPLIT_Y;
 		costToBeat = bestCostSoFar;
 	}
@@ -619,7 +617,6 @@ void KdTree::CalcBestSplit( const AABB& aabb, const VectorR3& deltaBox, double t
 						numTriplesToLeft, numObjectsToLeft, numObjectsToRight,
 						costObjectsToLeft, costObjectsToRight ) )
 	{
-		foundBetter = true;
 		*splitAxisID = KD_SPLIT_Z;
 	}
 

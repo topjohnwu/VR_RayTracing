@@ -168,6 +168,8 @@ void ViewableSphere::CalcUV( double x, double y, double z, int uvprojectiontype,
 		v = (y+1.0)*0.5;
 
 		break;
+	default:
+		exit(1);
 	}
 
 	returnedUV->Set(u, v);

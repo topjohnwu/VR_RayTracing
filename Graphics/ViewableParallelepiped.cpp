@@ -238,6 +238,8 @@ bool ViewableParallelepiped::FindIntersectionNT (
 			v.Negate();
 		}
 		break;
+	default:
+		exit(1);
 	}
 	returnedPoint.SetUV(uCoord,vCoord);
 	returnedPoint.SetFaceNumber( faceNum );

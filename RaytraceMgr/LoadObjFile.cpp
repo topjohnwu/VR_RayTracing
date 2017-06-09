@@ -72,13 +72,7 @@ bool ObjFileLoader::Load( const char* filename, SceneDescription& theScene )
 			continue;				// Ignore if a comment or a blank line
 		}
 
-		bool parseErrorOccurred = false;		
-
 		char theCommand[17];
-		int scanCode = sscanf( inbuffer, "%16s", theCommand );
-		if ( scanCode!=1 ) {
-			parseErrorOccurred = true;
-		}
 		int cmdNum = GetCommandNumber( theCommand );		
 		if ( cmdNum==-1 ) {
 			AddUnsupportedCmd( theCommand );
@@ -86,34 +80,27 @@ bool ObjFileLoader::Load( const char* filename, SceneDescription& theScene )
 		}
 		
 		char* args = ScanForSecondField( findStart );
-		bool ok = true;
 		switch ( cmdNum ) {
 		case 0:   // 'v' command
 			{
 				VectorR4* vertData = Vertices.Push();
-				ok = ReadVectorR4Hg ( args, vertData );
+				ReadVectorR4Hg ( args, vertData );
 			}
 			break;
 		case 1:   // "vt" command
 			{
 				VectorR2* texData = TextureCoords.Push();
-				ok = ReadTexCoords( args, texData );
+				ReadTexCoords( args, texData );
 			}
 			break;
 		case 2:   // The 'f' command
 			{
-				ok = ProcessFace( args );
+				ProcessFace( args );
 			}
 			break;
 		case 3:   // 'l' command
 			UnsupportedLines();
 			break;
-		default:
-			parseErrorOccurred  = true;
-			break;
-		}
-		if ( !ok ) {
-			parseErrorOccurred = true;
 		}
 	}
 }
@@ -226,9 +213,6 @@ bool ObjFileLoader::ProcessFace( char* inbuf)
 	//	(a) vertices,  (b) texture coordinates,  (c)  vertex normals.
 	long vertNums[3*maxNumVerts];		// Use -1 for missing values
 
-	bool missingNormals = false;
-	bool missingTexCoords = false;
-
 	int i;
 	char* s = inbuf;
 	for ( i=0; i<maxNumVerts+1; i++ ) {
@@ -253,13 +237,10 @@ bool ObjFileLoader::ProcessFace( char* inbuf)
 		s = ScanForWhiteOrSlash( s );
 		if ( (*s)!='/' ) {
 			vertNums[3*i+1] = vertNums[3*i+2] = -1;	// No texture coords or normal
-			missingTexCoords = true;
-			missingNormals = true;
 			continue;
 		}
 		if ( (*(s+1))=='/' || (*(s+1))==' ' || (*(s+1))==0 ) {
 			vertNums[3*i+1] = -1;
-			missingTexCoords = true;
 		}
 		else {
 			scanCode = sscanf( s+1, "%ld", &scannedInt );
@@ -275,12 +256,10 @@ bool ObjFileLoader::ProcessFace( char* inbuf)
 		s = ScanForWhiteOrSlash( s+1 );
 		if ( (*s)!='/' ) {
 			vertNums[3*i+2] = -1;	// No normal
-			missingNormals = true;
 			continue;
 		}
 		if ( (*(s+1))==' ' || (*(s+1))==0 ) {
 			vertNums[3*i+2] = -1;
-			missingNormals = true;
 		}
 		else {
 			scanCode = sscanf( s+1, "%ld", vertNums+3*i+2 );

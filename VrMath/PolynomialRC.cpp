@@ -287,7 +287,7 @@ double NewtonSolve_POLYRC( int degree, double* coefs, double startpos, double st
 	double lastEst = startpos;
 	double lastVal = startval;
 	double scale = 1.0;
-	int lastSign;
+	int lastSign = 0;
 	
 	int i = 0;
 	bool closeFlag = false;
@@ -424,7 +424,7 @@ int PolySolveRealAll( int degree, double* coefsarray, double* rootsarray)
 		else if ( lastSign!=curSign ) {
 			double minRoot = last1Root;
 			int cur2Sign = lastSign;		// Start with sign at curVal
-			double cur2Val, last2Val;
+			double cur2Val = 0, last2Val = 0;
 			bool last2ValValid = false;
 			while ( (*p2Ptr)<(*p1Ptr) ) {
 				assert(*p2Ptr != DBL_MAX );

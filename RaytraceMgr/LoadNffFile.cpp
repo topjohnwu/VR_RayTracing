@@ -111,13 +111,8 @@ bool NffFileLoader::Load( const char* filename, SceneDescription& theScene )
 			continue;				
 		}
 
-		bool parseErrorOccurred = false;		
-
 		char theCommand[17];
 		int scanCode = sscanf( inbuffer, "%16s", theCommand );
-		if ( scanCode!=1 ) {
-			parseErrorOccurred = true;
-		}
 		int cmdNum = GetCommandNumber( theCommand );		
 		if ( cmdNum==-1 ) {
 			AddUnsupportedCmd( theCommand );
@@ -301,14 +296,12 @@ bool NffFileLoader::Load( const char* filename, SceneDescription& theScene )
 				break;
 			}
 		default:
-			parseErrorOccurred  = true;
 			ok = false;
 			break;
 		}
 
 		if ( !ok ) {
 			fprintf(stderr, "Parse error in NFF file, line %ld: %40s.\n", FileLineNumber, inbuffer );
-			parseErrorOccurred = true;
 		}
 
 	}

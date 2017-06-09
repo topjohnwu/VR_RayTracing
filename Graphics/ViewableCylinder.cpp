@@ -31,7 +31,7 @@ bool ViewableCylinder::FindIntersectionNT (
 {
 	double maxFrontDist = -DBL_MAX;
 	double minBackDist = DBL_MAX;
-	int frontType, backType;		// 0, 1, 2 = top, bottom, side
+	int frontType = 0, backType = 0;		// 0, 1, 2 = top, bottom, side
 
 
 	// Start with the bounding planes

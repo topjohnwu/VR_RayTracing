@@ -46,8 +46,8 @@ bool ClipConvexPolygonAgainstPlane( int *numVerts, VectorR3 vertArray[],
 	VectorR3 exitPoint;		// The point where the polygon leaves the plane
 	int enterIndex = -1;	// The index of the first vert inside the plane
 	int exitIndex = -1;		// The index of the first vert outside the plane
-	int enterExact;			// Equals zero if vertArray[enterVert] lies exactly on the plane
-	int exitExact;			// Equals zero if vertArray[exitVert-1] lies exactly on the plane
+	int enterExact = 0;		// Equals zero if vertArray[enterVert] lies exactly on the plane
+	int exitExact = 0;		// Equals zero if vertArray[exitVert-1] lies exactly on the plane
 
 	int N = *numVerts;
 	VectorR3* prevVertPtr = &(vertArray[N-1]);

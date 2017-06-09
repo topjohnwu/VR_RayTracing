@@ -3,7 +3,7 @@
 CC = g++
 CPPFLAGS = -O3 -Wall -Wno-deprecated-declarations -std=c++11
 MACFLAG = -framework GLUT -framework OpenGL -framework Cocoa
-LINUXFLAG = -lGL -lGLU -lglut
+LINUXFLAG = -lGL -lGLU -lglut -lpthread
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
@@ -58,7 +58,7 @@ OBJ = \
 	VrMath/Quaternion.o \
 
 raytracekd.out: $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -o raytracekd.out
+	$(CC) $(OBJ) -o raytracekd.out $(FLAGS)
 
 clean: 
 	@rm $(OBJ) raytracekd.out 2>/dev/null || true
