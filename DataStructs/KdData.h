@@ -6,7 +6,7 @@
 class KdData {
 public:
 	KdData() 
-	: isectEpsilon(1.0e-6) {}
+	: isectEpsilon(1.0e-6), bestObject(-1), bestHitDistance(DBL_MAX) {}
 	bool kdTraverseFeeler;
 	double isectEpsilon;
 	long bestObject;
