@@ -26,6 +26,8 @@
 #include <random>
 #include <thread>
 #include <mutex>
+#include <chrono>
+#include <iostream>
 
 // If you do not have GLUT installed, you can use the basic GL routines instead.
 //   For this, include windows.h and GL/gl.h, instead of GL/glut.h
@@ -161,6 +163,7 @@ public:
 		} else {
 			ret = false;
 		}
+		printf("(%d, %d) ", i, j);
 		lock.unlock();
 		return ret;
 	}
@@ -199,6 +202,8 @@ static void tracePixel(PixelWindow *Window, const CameraView *MainView) {
 
 void RayTraceView(void)
 {
+	auto start = chrono::system_clock::now();
+
 	if ( WidthRayTraced!=WindowWidth || NumScanLinesRayTraced!=WindowHeight ) {  
 		// Do the rendering here
 		MyStats.Init();
@@ -232,6 +237,11 @@ void RayTraceView(void)
 	// flush the pipeline, swap the buffers
 	glFlush();
 	glutSwapBuffers();
+
+	auto end = chrono::system_clock::now();
+	auto elapsed = chrono::duration_cast<std::chrono::seconds>(end - start);
+	cout << "Raytrace (" << WindowWidth << "x" << WindowHeight
+	     << ") -j" << THREAD_NUM << " Time: " << elapsed.count() << "(s)" << endl;
 
 }
 
