@@ -175,17 +175,29 @@ private:
 
 #define subPixelNum 4
 #define traceDepth 3
-#define THREAD_NUM thread::hardware_concurrency()
-// #define THREAD_NUM 1
+int THREAD_NUM = thread::hardware_concurrency();
+// int THREAD_NUM = 1;
 
 /******************************** 
   TODO: Implement features here
 *********************************/
-static void tracePixel(PixelWindow *Window, const CameraView *MainView) {
+
+static int getNext(int &i, int &j) {
+	i += THREAD_NUM;
+	if (i >= WindowWidth) {
+		i %= THREAD_NUM;
+		++j;
+	}
+	if (j >= WindowHeight)
+		return 0;
+	return 1;
+}
+
+static void tracePixel(const CameraView *MainView, int num) {
 	VectorR3 PixelDir;
 	VectorR3 curPixelColor, tempPixelColor;
-	int i, j;
-	while (Window->getNext(i, j)) {
+	int i = num, j = 0;
+	while (getNext(i, j)) {
 		for( int k = 0; k < subPixelNum; ++k) {
 			for( int l = 0; l < subPixelNum; ++l) {
 				double x = i + (k + distribution(generator))/subPixelNum;
@@ -210,10 +222,10 @@ void RayTraceView(void)
 		ObjectKdTree.ResetStats();
 
 		thread threads[THREAD_NUM];
-		PixelWindow Window(WindowWidth, WindowHeight);
 
+		int num = 0;
 		for (thread &t : threads)
-			t = thread(tracePixel, &Window, &ActiveScene->GetCameraView());
+			t = thread(tracePixel, &ActiveScene->GetCameraView(), num++);
 
 		for (thread &t : threads)
 			t.join();
