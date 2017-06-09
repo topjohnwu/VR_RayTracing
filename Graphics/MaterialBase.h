@@ -61,6 +61,9 @@ public:
 	double GetRoughness() const { return Roughness; }
 	void SetRoughness(double r) { Roughness = r; }
 
+	double GetTranslucent() const { return Translucent; }
+	void SetTransluscent(double t) { Translucent = t; }
+
 	void SetColorAmbient( double r, double g, double b);
 	void SetColorDiffuse( double r, double g, double b);
 	void SetColorAmbientDiffuse( double r, double g, double b);
@@ -109,6 +112,7 @@ protected:
 	VectorR3 ColorSpecular;
 	VectorR3 ColorEmissive;
 	double Roughness;
+	double Translucent;
 
 public:
 	static bool CalcRefractDir( double indexOfRefraction, double indexOfRefractionInv,
