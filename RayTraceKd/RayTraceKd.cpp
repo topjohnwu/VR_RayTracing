@@ -69,7 +69,7 @@ long SeekIntersectionKd(KdData *data, const VectorR3& startPos, const VectorR3& 
 										double *hitDist, VisiblePoint& returnedPoint,
 										long avoidK = -1);
 void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir, 
-			  VectorR3& returnedColor, long avoidK = -1);
+			  VectorR3& returnedColor, double& hitDist, long avoidK = -1);
 bool ShadowFeeler(const VectorR3& pos, const Light& light, long intersectNum=-1 );
 void CalcAllDirectIllum( KdData *data, const VectorR3& viewPos, const VisiblePoint& visPoint, 
 						VectorR3& returnedColor, long avoidK = -1);
@@ -251,6 +251,32 @@ void RayTraceView(void)
 		for (thread &t : threads)
 			t.join();
 
+		int TraceDepth = 3;
+		int subPixelNum = 4;
+		for ( i=0; i<WindowWidth; i++) {
+			for ( j=0; j<WindowHeight; j++ ) {
+				//if ( i==15 && (j==91 || j==169) ) {
+				// if ( i==16 && j==WindowHeight-106 ) {
+				// 	int iii = 0;
+				// }
+				//i = 15;
+				//j = 91;
+				//j = 169;
+				VectorR3 tempPixelColor;
+				for( int k = 0; k < subPixelNum; ++k) {
+					for( int l = 0; l < subPixelNum; ++l) {
+						double x = i + (k + distribution(generator))/subPixelNum;
+						double y = j + (l + distribution(generator))/subPixelNum;
+						MainView.CalcPixelDirection(x,y,&PixelDir);
+						double tempHitDist;
+						RayTrace( TraceDepth, MainView.GetPosition(), PixelDir, curPixelColor,tempHitDist );
+						tempPixelColor += curPixelColor;						
+					}
+				}
+				tempPixelColor /= (subPixelNum*subPixelNum);
+				pixels->SetPixel(i,j,tempPixelColor);
+			}
+		}
 		WidthRayTraced = WindowWidth;			// Set these values to show scene has been computed.
 		NumScanLinesRayTraced = WindowHeight;
 		MyStats.GetKdRunData( ObjectKdTree );
@@ -386,9 +412,9 @@ bool ShadowFeelerKd(KdData *data, const VectorR3& pos, const Light& light, long 
 
 
 void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir, 
-			  VectorR3& returnedColor, long avoidK ) 
+			  VectorR3& returnedColor, double& hitDist, long avoidK ) 
 {
-	double hitDist;
+	// double hitDist;
 	VisiblePoint visPoint;
 
 	KdData data;
@@ -424,7 +450,8 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 				}
 
 				VectorR3 c = thisMat->GetReflectionColor(visPoint, -dir, nextDir);
-				RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, intersectNum);
+				double tempHitDist;
+				RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, tempHitDist, intersectNum);
 				moreColor.x *= c.x;
 				moreColor.y *= c.y;
 				moreColor.z *= c.z;
@@ -447,7 +474,15 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 					}
 
 					VectorR3 c = thisMat->GetTransmissionColor(visPoint, -dir, nextDir);
-					RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, intersectNum);
+					double tempHitDist;
+					RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, tempHitDist, intersectNum);
+					double translucent = thisMat->GetTranslucent();
+					if (translucent > 0.0000001) {
+						double rate = exp(-1 * translucent * tempHitDist);
+						moreColor.x *= rate;
+						moreColor.y *= rate;
+						moreColor.z *= rate;
+					}
 					moreColor.x *= c.x;
 					moreColor.y *= c.y;
 					moreColor.z *= c.z;

@@ -206,6 +206,7 @@ void SetUpMaterials() {
 	mat5->SetColorTransmissive( Mat5trans );
 	mat5->SetShininess( Mat5shiny );
 	mat5->SetIndexOfRefraction(1.5);	// Glass!
+	mat5->SetTransluscent(0.05);
 
 	Material* mat6 = new Material;
 	TheScene2.AddMaterial(mat6);

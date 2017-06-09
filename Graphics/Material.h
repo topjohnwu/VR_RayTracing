@@ -106,6 +106,7 @@ protected:
 inline void Material::Reset() 
 {	
 	Roughness = 0.0;
+	Translucent = 0.0;
 	Shininess = 0.0f;
 	SetColorAmbient( 0.2, 0.2, 0.2 );
 	SetColorDiffuse( 0.8, 0.8, 0.8 );
