@@ -76,25 +76,25 @@ KdTree::~KdTree()
 //	 startPos - beginning of the ray.
 //	 dir - direction of the ray.
 //   Returns "true" if traversal aborted by the callback function returning "true"
-bool KdTree::Traverse( const VectorR3& startPos, const VectorR3& dir, 
+bool KdTree::Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, 
 				PotentialObjectCallback* pocFunc, double seekDistance, bool obeySeekDistance  )
 {
 	CallbackFunction = (void*) pocFunc;
 	UseListCallback = false;
 
-	return Traverse( startPos, dir, seekDistance, obeySeekDistance );
+	return Traverse( data, startPos, dir, seekDistance, obeySeekDistance );
 }
 
-bool KdTree::Traverse( const VectorR3& startPos, const VectorR3& dir, 
+bool KdTree::Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, 
 				PotentialObjectsListCallback* polcFunc, double seekDistance, bool obeySeekDistance  )
 {
 	CallbackFunction = (void*) polcFunc;
 	UseListCallback = true;
 
-	return Traverse( startPos, dir, seekDistance, obeySeekDistance );
+	return Traverse( data, startPos, dir, seekDistance, obeySeekDistance );
 }
 
-bool KdTree::Traverse( const VectorR3& startPos, const VectorR3& dir, double seekDistance, bool obeySeekDistance )
+bool KdTree::Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, double seekDistance, bool obeySeekDistance )
 {
 	double entryDist, exitDist;
 	int entryFaceId, exitFaceId;
@@ -250,7 +250,8 @@ bool KdTree::Traverse( const VectorR3& startPos, const VectorR3& dir, double see
 				bool stopFlag;
 				double newStopDist;
 				Stats_ObjectsInLeaves( currentNode->Data.Leaf.NumObjects );
-				stopFlag = (*((PotentialObjectsListCallback*)CallbackFunction))( 
+				stopFlag = (*((PotentialObjectsListCallback*)CallbackFunction))(
+										data,
 										currentNode->Data.Leaf.NumObjects, 
 										currentNode->Data.Leaf.ObjectList, 
 										&newStopDist );
@@ -267,7 +268,7 @@ bool KdTree::Traverse( const VectorR3& startPos, const VectorR3& dir, double see
 				long* objectIdPtr = currentNode->Data.Leaf.ObjectList;
 				for ( ; i>0; i-- ) {
 					if ( (*((PotentialObjectCallback*)CallbackFunction))( 
-												*objectIdPtr, &newStopDist )  )  
+												data, *objectIdPtr, &newStopDist )  )  
 					{
 						stopDistanceActive = true;
 						stopDistance = newStopDist;

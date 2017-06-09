@@ -37,6 +37,7 @@
 #include "../DataStructs/Array.h"
 #include "../DataStructs/Stack.h"
 #include "../VrMath/Aabb.h"
+#include "KdData.h"
 class RayTraceStats;	// Statistics for KdTree traversal
 
 class KdTree;			// kd-tree.
@@ -60,12 +61,12 @@ typedef double ObjectCostFunction( long objectNum );
 // Callback routines that are used to return information while traversing the tree.
 //    Gives an object in a leaf node.  
 //	  Return code is "true" if the returned stop distance is relevant
-typedef bool PotentialObjectCallback( long objectNum, double* retStopDistance );
+typedef bool PotentialObjectCallback( KdData *data, long objectNum, double* retStopDistance );
 //    Returns the list of objects in a leaf node.
 //	  The list is sorted by objectNums.  
 //	  The list is static, so the pointer may be saved for later use.
 //	  Return code is "true" if the returned stop distance is relevant
-typedef bool PotentialObjectsListCallback( int numberOfObjects, long* objectNums, double* retStopDistance );
+typedef bool PotentialObjectsListCallback( KdData *data, int numberOfObjects, long* objectNums, double* retStopDistance );
 
 enum KD_SplittingAxis {
 	KD_SPLIT_X = 0,
@@ -95,9 +96,9 @@ public:
 	//	 startPos - beginning of the ray.
 	//	 dir - direction of the ray.
 	//   Returns "true" if traversal aborted by the callback function returning "true"
-	bool Traverse( const VectorR3& startPos, const VectorR3& dir, 
+	bool Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, 
 					PotentialObjectCallback* pocFunc, double seekDistance = 0.0, bool useSeekDistance = false );
-	bool Traverse( const VectorR3& startPos, const VectorR3& dir, 
+	bool Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, 
 					PotentialObjectsListCallback* polcFunc, double seekDistance = 0.0, bool useSeekDistance = false );
 
 	// ******** Accessors ****************
@@ -110,7 +111,7 @@ public:
 	void Stats_GetAll( long* numNodes, long* numNonEmptyLeaves, long* numObjsInLeaves ) const;
 
 private:
-	bool Traverse( const VectorR3& startPos, const VectorR3& dir, double seekDistance = 0.0, bool useSeekDistance = false );
+	bool Traverse( KdData *data, const VectorR3& startPos, const VectorR3& dir, double seekDistance = 0.0, bool useSeekDistance = false );
 
 public:
 	// ****** Tree building routines *******

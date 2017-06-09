@@ -48,6 +48,7 @@
 #include "../VrMath/MathMisc.h"
 #include "../OpenglRender/GlutRenderer.h"
 #include "../DataStructs/KdTree.h"
+#include "../DataStructs/KdData.h"
 #include "../RaytraceMgr/LoadNffFile.h"
 #include "../RaytraceMgr/LoadObjFile.h"
 #include "../RaytraceMgr/SceneDescription.h"
@@ -59,13 +60,13 @@ void RayTraceView(void);
 long SeekIntersection(const VectorR3& startPos, const VectorR3& direction,
 										double *hitDist, VisiblePoint& returnedPoint,
 										long avoidK = -1);
-long SeekIntersectionKd(const VectorR3& startPos, const VectorR3& direction,
+long SeekIntersectionKd(KdData *data, const VectorR3& startPos, const VectorR3& direction,
 										double *hitDist, VisiblePoint& returnedPoint,
 										long avoidK = -1);
-void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir, 
+void RayTrace( KdData *data, int TraceDepth, const VectorR3& pos, const VectorR3 dir, 
 			  VectorR3& returnedColor, long avoidK = -1);
 bool ShadowFeeler(const VectorR3& pos, const Light& light, long intersectNum=-1 );
-void CalcAllDirectIllum( const VectorR3& viewPos, const VisiblePoint& visPoint, 
+void CalcAllDirectIllum( KdData *data, const VectorR3& viewPos, const VisiblePoint& visPoint, 
 						VectorR3& returnedColor, long avoidK = -1);
 
 static void ResizeWindow(int w, int h);
@@ -154,10 +155,7 @@ void RayTraceView(void)
 		MyStats.Init();
 		ObjectKdTree.ResetStats();
 		int TraceDepth = 3;
-		// int superSampleNum = 4;
 		int subPixelNum = 4;
-		// default_random_engine generator;
-		// uniform_real_distribution<double> distribution(0.0,1.0);
 		for ( i=0; i<WindowWidth; i++) {
 			for ( j=0; j<WindowHeight; j++ ) {
 				//if ( i==15 && (j==91 || j==169) ) {
@@ -170,10 +168,11 @@ void RayTraceView(void)
 				VectorR3 tempPixelColor;
 				for( int k = 0; k < subPixelNum; ++k) {
 					for( int l = 0; l < subPixelNum; ++l) {
+						KdData data;
 						double x = i + (k + distribution(generator))/subPixelNum;
 						double y = j + (l + distribution(generator))/subPixelNum;
 						MainView.CalcPixelDirection(x,y,&PixelDir);
-						RayTrace( TraceDepth, MainView.GetPosition(), PixelDir, curPixelColor );
+						RayTrace( &data, TraceDepth, MainView.GetPosition(), PixelDir, curPixelColor );
 						tempPixelColor += curPixelColor;						
 					}
 				}
@@ -204,62 +203,46 @@ void RayTraceView(void)
 }
 
 
-// *********************************************************
-// Data that supports the callback operation 
-//		of the SeekIntersectionKd kd-Tree Traversal
-//      and the ShadowFeelerKd kd-Tree Traversal
-// *********************************************************
-bool kdTraverseFeeler;
-double isectEpsilon = 1.0e-6;
-long bestObject;
-long kdTraverseAvoid;
-double bestHitDistance;
-double kdShadowDist;
-VisiblePoint tempPoint;
-VisiblePoint* bestHitPoint;
-VectorR3 kdStartPos;
-VectorR3 kdStartPosAvoid;
-VectorR3 kdTraverseDir;
 
 // Call back function for KdTraversal of view ray or reflection ray
 // It is of type PotentialObjectCallback.
-bool potHitSeekIntersection( long objectNum, double* retStopDistance ) 
+bool potHitSeekIntersection( KdData *data, long objectNum, double* retStopDistance ) 
 {
 	double thisHitDistance;
 	bool hitFlag;
-	if ( objectNum == kdTraverseAvoid ) {
-		hitFlag = ActiveScene->GetViewable(objectNum).FindIntersection(kdStartPosAvoid, kdTraverseDir,
-											bestHitDistance, &thisHitDistance, tempPoint);
+	if ( objectNum == data->kdTraverseAvoid ) {
+		hitFlag = ActiveScene->GetViewable(objectNum).FindIntersection(data->kdStartPosAvoid, data->kdTraverseDir,
+											data->bestHitDistance, &thisHitDistance, data->tempPoint);
 		if ( !hitFlag ) {
 			return false;
 		}
-		thisHitDistance += isectEpsilon;		// Adjust back to real hit distance
+		thisHitDistance += data->isectEpsilon;		// Adjust back to real hit distance
 	}
 	else {
-		hitFlag = ActiveScene->GetViewable(objectNum).FindIntersection(kdStartPos, kdTraverseDir,
-											bestHitDistance, &thisHitDistance, tempPoint);
+		hitFlag = ActiveScene->GetViewable(objectNum).FindIntersection(data->kdStartPos, data->kdTraverseDir,
+											data->bestHitDistance, &thisHitDistance, data->tempPoint);
 		if ( !hitFlag ) {
 			return false;
 		}
 	}
 
-	*bestHitPoint = tempPoint;		// The visible point that was hit
-	bestObject = objectNum;				// The object that was hit
-	bestHitDistance = thisHitDistance;
-	*retStopDistance = bestHitDistance;	// No need to traverse search further than this distance
+	*data->bestHitPoint = data->tempPoint;		// The visible point that was hit
+	data->bestObject = objectNum;				// The object that was hit
+	data->bestHitDistance = thisHitDistance;
+	*retStopDistance = data->bestHitDistance;	// No need to traverse search further than this distance
 	return true;
 }
 
 // Call back function for KdTraversal of shadow feeler
 // It is of type PotentialObjectCallback.
-bool potHitShadowFeeler( long objectNum, double* retStopDistance ) 
+bool potHitShadowFeeler( KdData *data, long objectNum, double* retStopDistance ) 
 {
 	double thisHitDistance;
-	bool hitFlag = ActiveScene->GetViewable(objectNum).FindIntersection(kdStartPos, kdTraverseDir,
-											kdShadowDist, &thisHitDistance, tempPoint);
-	if  ( hitFlag && !(/*objectNum==kdTraverseAvoid &&*/ thisHitDistance+isectEpsilon>=kdShadowDist) )
+	bool hitFlag = ActiveScene->GetViewable(objectNum).FindIntersection(data->kdStartPos, data->kdTraverseDir,
+											data->kdShadowDist, &thisHitDistance, data->tempPoint);
+	if  ( hitFlag && !(/*objectNum==kdTraverseAvoid &&*/ thisHitDistance+data->isectEpsilon>=data->kdShadowDist) )
 	{
-		kdTraverseFeeler = false;
+		data->kdTraverseFeeler = false;
 		*retStopDistance = -1.0;	// Negative value should abort process quickly
 		return true;
 	}
@@ -274,28 +257,28 @@ bool potHitShadowFeeler( long objectNum, double* retStopDistance )
 // If it finds one, it returns the index of the viewable object,
 //   and sets the value of hitDist and fills in the returnedPoint values.
 // This "Kd" version uses the Kd-Tree
-long SeekIntersectionKd(const VectorR3& pos, const VectorR3& direction,
+long SeekIntersectionKd( KdData *data, const VectorR3& pos, const VectorR3& direction,
 										double *hitDist, VisiblePoint& returnedPoint,
 										long avoidK)
 {
 	MyStats.AddRayTraced();
 
-	bestObject = -1;
-	bestHitDistance = DBL_MAX;
-	kdTraverseAvoid = avoidK;
-	kdStartPos = pos;
-	kdTraverseDir = direction;
-	kdStartPosAvoid = pos;
-	kdStartPosAvoid.AddScaled( direction, isectEpsilon );
-	bestHitPoint = &returnedPoint;
+	data->bestObject = -1;
+	data->bestHitDistance = DBL_MAX;
+	data->kdTraverseAvoid = avoidK;
+	data->kdStartPos = pos;
+	data->kdTraverseDir = direction;
+	data->kdStartPosAvoid = pos;
+	data->kdStartPosAvoid.AddScaled( direction, data->isectEpsilon );
+	data->bestHitPoint = &returnedPoint;
 	
-	bestObject = -1;
-	ObjectKdTree.Traverse( pos, direction, *potHitSeekIntersection );
+	data->bestObject = -1;
+	ObjectKdTree.Traverse( data, pos, direction, *potHitSeekIntersection );
 
-	if ( bestObject>=0 ) {
-		*hitDist = bestHitDistance;
+	if ( data->bestObject>=0 ) {
+		*hitDist = data->bestHitDistance;
 	}
-	return bestObject;
+	return data->bestObject;
 }	
 
 // ShadowFeeler - returns whether the light is visible from the position pos.
@@ -303,40 +286,40 @@ long SeekIntersectionKd(const VectorR3& pos, const VectorR3& direction,
 //		intersectNum is the index of the visible object being (possibly)
 //		illuminated at pos.
 
-bool ShadowFeelerKd(const VectorR3& pos, const Light& light, long intersectNum ) {
+bool ShadowFeelerKd(KdData *data, const VectorR3& pos, const Light& light, long intersectNum ) {
 	MyStats.AddRayTraced();
 	MyStats.AddShadowFeeler();
 
-	kdTraverseDir = pos;
-	kdTraverseDir -= light.GetPosition();
-	double dist = kdTraverseDir.Norm();
+	data->kdTraverseDir = pos;
+	data->kdTraverseDir -= light.GetPosition();
+	double dist = data->kdTraverseDir.Norm();
 	if ( dist<1.0e-7 ) {
 		return true;		// Extremely close to the light!
 	}
-	kdTraverseDir /= dist;			// Direction from light position towards pos
-	kdStartPos = light.GetPosition();
-	kdTraverseFeeler = true;		// True indicates no shadowing objects
-	kdTraverseAvoid = intersectNum;
-	kdShadowDist = dist;
-	ObjectKdTree.Traverse( light.GetPosition(), kdTraverseDir, potHitShadowFeeler, dist, true );
+	data->kdTraverseDir /= dist;			// Direction from light position towards pos
+	data->kdStartPos = light.GetPosition();
+	data->kdTraverseFeeler = true;		// True indicates no shadowing objects
+	data->kdTraverseAvoid = intersectNum;
+	data->kdShadowDist = dist;
+	ObjectKdTree.Traverse( data, light.GetPosition(), data->kdTraverseDir, potHitShadowFeeler, dist, true );
 
-	return kdTraverseFeeler;	// Return whether ray is free of shadowing objects
+	return data->kdTraverseFeeler;	// Return whether ray is free of shadowing objects
 }
 
 
-void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir, 
+void RayTrace( KdData *data, int TraceDepth, const VectorR3& pos, const VectorR3 dir, 
 			  VectorR3& returnedColor, long avoidK ) 
 {
 	double hitDist;
 	VisiblePoint visPoint;
 
-	int intersectNum = SeekIntersectionKd(pos, dir,
+	int intersectNum = SeekIntersectionKd(data, pos, dir,
 								&hitDist, visPoint, avoidK );
 	if ( intersectNum<0 ) {
 		returnedColor = ActiveScene->BackgroundColor();
 	}
 	else {
-		CalcAllDirectIllum( pos, visPoint, returnedColor, intersectNum );
+		CalcAllDirectIllum( data, pos, visPoint, returnedColor, intersectNum );
 		if ( TraceDepth > 1 ) {
 			VectorR3 nextDir;
 			VectorR3 moreColor;
@@ -361,7 +344,7 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 				}
 
 				VectorR3 c = thisMat->GetReflectionColor(visPoint, -dir, nextDir);
-				RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, intersectNum);
+				RayTrace( data, TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, intersectNum);
 				moreColor.x *= c.x;
 				moreColor.y *= c.y;
 				moreColor.z *= c.z;
@@ -384,7 +367,7 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 					}
 
 					VectorR3 c = thisMat->GetTransmissionColor(visPoint, -dir, nextDir);
-					RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, intersectNum);
+					RayTrace( data, TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, intersectNum);
 					moreColor.x *= c.x;
 					moreColor.y *= c.y;
 					moreColor.z *= c.z;
@@ -395,7 +378,7 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 	}
 }
 
-void CalcAllDirectIllum( const VectorR3& viewPos,
+void CalcAllDirectIllum( KdData *data, const VectorR3& viewPos,
 						 const VisiblePoint& visPoint, 
 						 VectorR3& returnedColor, long avoidK )
 {
@@ -432,7 +415,7 @@ void CalcAllDirectIllum( const VectorR3& viewPos,
 			}
 		}
 		if ( clearpath ) {
-			clearpath = ShadowFeelerKd(visPoint.GetPosition(), thisLight, avoidK );
+			clearpath = ShadowFeelerKd(data, visPoint.GetPosition(), thisLight, avoidK );
 		}
 		if ( clearpath ) {
 			percentLit.Set(1.0,1.0,1.0);	// Directly lit, with no shadowing
