@@ -69,10 +69,11 @@ long SeekIntersectionKd(KdData *data, const VectorR3& startPos, const VectorR3& 
 										double *hitDist, VisiblePoint& returnedPoint,
 										long avoidK = -1);
 void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir, 
-			  VectorR3& returnedColor, long avoidK = -1);
+			  VectorR3& returnedColor, double& hitDist, double eta = 1, long avoidK = -1);
 bool ShadowFeeler(const VectorR3& pos, const Light& light, long intersectNum=-1 );
 void CalcAllDirectIllum( KdData *data, const VectorR3& viewPos, const VisiblePoint& visPoint, 
 						VectorR3& returnedColor, long avoidK = -1);
+void TransmitAndReflective(double cos1, double eta1, double eta2, double& transmitRate, double& reflectRate);
 
 static void ResizeWindow(int w, int h);
 
@@ -203,7 +204,8 @@ static void tracePixel(const CameraView *MainView, int num) {
 				double x = i + (k + distribution(generator))/subPixelNum;
 				double y = j + (l + distribution(generator))/subPixelNum;
 				MainView->CalcPixelDirection(x,y,&PixelDir);
-				RayTrace( traceDepth, MainView->GetPosition(), PixelDir, curPixelColor );
+				double tempHitDist;
+				RayTrace( traceDepth, MainView->GetPosition(), PixelDir, curPixelColor, tempHitDist );
 				tempPixelColor += curPixelColor;
 			}
 		}
@@ -230,6 +232,32 @@ void RayTraceView(void)
 		for (thread &t : threads)
 			t.join();
 
+		// int TraceDepth = 3;
+		// int subPixelNum = 4;
+		// for ( i=0; i<WindowWidth; i++) {
+		// 	for ( j=0; j<WindowHeight; j++ ) {
+		// 		//if ( i==15 && (j==91 || j==169) ) {
+		// 		// if ( i==16 && j==WindowHeight-106 ) {
+		// 		// 	int iii = 0;
+		// 		// }
+		// 		//i = 15;
+		// 		//j = 91;
+		// 		//j = 169;
+		// 		VectorR3 tempPixelColor;
+		// 		for( int k = 0; k < subPixelNum; ++k) {
+		// 			for( int l = 0; l < subPixelNum; ++l) {
+		// 				double x = i + (k + distribution(generator))/subPixelNum;
+		// 				double y = j + (l + distribution(generator))/subPixelNum;
+		// 				MainView.CalcPixelDirection(x,y,&PixelDir);
+		// 				double tempHitDist;
+		// 				RayTrace( TraceDepth, MainView.GetPosition(), PixelDir, curPixelColor, tempHitDist );
+		// 				tempPixelColor += curPixelColor;						
+		// 			}
+		// 		}
+		// 		tempPixelColor /= (subPixelNum*subPixelNum);
+		// 		pixels->SetPixel(i,j,tempPixelColor);
+		// 	}
+		// }
 		WidthRayTraced = WindowWidth;			// Set these values to show scene has been computed.
 		NumScanLinesRayTraced = WindowHeight;
 		MyStats.GetKdRunData( ObjectKdTree );
@@ -365,9 +393,9 @@ bool ShadowFeelerKd(KdData *data, const VectorR3& pos, const Light& light, long 
 
 
 void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir, 
-			  VectorR3& returnedColor, long avoidK ) 
+			  VectorR3& returnedColor, double& hitDist, double eta, long avoidK ) 
 {
-	double hitDist;
+	// double hitDist;
 	VisiblePoint visPoint;
 
 	KdData data;
@@ -384,6 +412,12 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 			VectorR3 moreColor;
 			const MaterialBase* thisMat = &(visPoint.GetMaterial());
 
+			double transmitRate = 1.0, reflectRate = 1.0;
+			bool transAndRef = thisMat->IsReflective() && thisMat->IsTransmissive() &&
+					thisMat->CalcRefractDir(visPoint.GetNormal(), dir, eta, nextDir);
+			// if (transAndRef) {
+			// 	TransmitAndReflective(abs(dir^visPoint.GetNormal()), eta, thisMat->GetEta(), transmitRate, reflectRate);
+			// }
 			// Ray trace reflection
 			if ( thisMat->IsReflective() ) {
 				nextDir = visPoint.GetNormal();
@@ -403,16 +437,22 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 				}
 
 				VectorR3 c = thisMat->GetReflectionColor(visPoint, -dir, nextDir);
-				RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, intersectNum);
+				double tempHitDist;
+				RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, tempHitDist, eta, intersectNum);
 				moreColor.x *= c.x;
 				moreColor.y *= c.y;
 				moreColor.z *= c.z;
+				if (transAndRef) {
+					moreColor.x *= reflectRate;
+					moreColor.y *= reflectRate;
+					moreColor.z *= reflectRate;
+				}
 				returnedColor += moreColor;
 			}
 
 			// Ray Trace Transmission
 			if ( thisMat->IsTransmissive() ) {
-				if ( thisMat->CalcRefractDir(visPoint.GetNormal(),dir, nextDir) ) {
+				if ( thisMat->CalcRefractDir(visPoint.GetNormal(), dir, eta, nextDir) ) {
 					double roughness = thisMat->GetRoughness();
 					if(roughness > 0.0000001) {
 						VectorR3 u = (nextDir.x < nextDir.y) ? VectorR3(1,0,0) : VectorR3(0,1,0);
@@ -426,10 +466,24 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 					}
 
 					VectorR3 c = thisMat->GetTransmissionColor(visPoint, -dir, nextDir);
-					RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, intersectNum);
+					double eta = thisMat->GetEta();
+					double tempHitDist;
+					RayTrace( TraceDepth-1, visPoint.GetPosition(), nextDir, moreColor, tempHitDist, eta, intersectNum);
+					double translucent = thisMat->GetTranslucent();
+					if (translucent > 0.0000001) {
+						double rate = exp(-1 * translucent * tempHitDist);
+						moreColor.x *= rate;
+						moreColor.y *= rate;
+						moreColor.z *= rate;
+					}
 					moreColor.x *= c.x;
 					moreColor.y *= c.y;
 					moreColor.z *= c.z;
+					if (transAndRef) {
+						moreColor.x *= transmitRate;
+						moreColor.y *= transmitRate;
+						moreColor.z *= transmitRate;
+					}
 					returnedColor += moreColor;
 				}
 			}
@@ -488,6 +542,25 @@ void CalcAllDirectIllum( KdData *data, const VectorR3& viewPos,
 		returnedColor.y += thisColor.y;
 		returnedColor.z += thisColor.z;
 	}
+}
+
+void TransmitAndReflective(double cos1, double eta1, double eta2, double& transmitRate, double& reflectRate)
+{
+	double cos2, sin1, sin2;
+	sin1 = sqrt(1 - cos1 * cos1);
+	sin2 = eta1 * sin1 / eta2;
+	cos2 = sqrt(1 - sin2 * sin2);
+	double gamma_v, gamma_h, tau_v, tau_h;
+	gamma_v = (eta2 * cos1 - eta1 * cos2) / (eta2 * cos1 + eta1 * cos2);
+	gamma_h = (eta2 * cos2 - eta1 * cos1) / (eta2 * cos2 + eta1 * cos1);
+	
+	// tau_v   = (2 * eta2 * cos1) / (eta2 * cos1 + eta1 * cos2);
+	// tau_h   = (2 * eta2 * cos1) / (eta2 * cos2 + eta1 * cos1);
+	tau_v   = (2 * eta1 * cos2) / (eta1 * cos2 + eta2 * cos1);
+	tau_h   = (2 * eta1 * cos2) / (eta1 * cos1 + eta2 * cos2);
+
+	transmitRate = sqrt((tau_v * tau_v + tau_h * tau_h) / 2);
+	reflectRate  = sqrt((gamma_v * gamma_v + gamma_h * gamma_h) / 2);
 }
 
 // called when the window is resized

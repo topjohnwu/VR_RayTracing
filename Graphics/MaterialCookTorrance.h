@@ -80,7 +80,7 @@ public:
 	void SetRefractionFromReflectance( float* rgb );
 	void SetRefractionFromReflectance( const VectorR3& reflectance );
 
-	bool CalcRefractDir( const VectorR3& normal, const VectorR3& indir, VectorR3& outdir ) const;
+	bool CalcRefractDir( const VectorR3& normal, const VectorR3& indir, const double& origEta, VectorR3& outdir ) const;
 
 	bool IsTransmissive() const { return TransmissiveFlag; }
 	bool IsReflective() const { return ReflectiveFlag; }
@@ -94,7 +94,8 @@ public:
 							const VectorR3& L, const VectorR3* H ) const;
 
 	// The next two routines are used for ray tracing.
-	// GetReflectionColor is the main Cook-Torrance computation.  
+	// GetReflectionColor is the main Cook-Torrance computation.
+	virtual double GetEta() const { return 0; }
 	virtual VectorR3 GetReflectionColor( const VisiblePoint& visPoint, 
 												const VectorR3& outDir, 
 												const VectorR3& fromDir) const;

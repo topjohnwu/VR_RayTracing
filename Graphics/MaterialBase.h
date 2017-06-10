@@ -45,7 +45,8 @@ public:
 	virtual bool IsReflective() const = 0;
 	virtual bool IsTransmissive() const =0;
 	virtual bool CalcRefractDir( const VectorR3& normal, 
-								 const VectorR3& indir, VectorR3& outdir ) const = 0;
+								 const VectorR3& indir, const double& origEta, VectorR3& outdir ) const = 0;
+	virtual double GetEta() const = 0;
 	virtual VectorR3 GetReflectionColor( const VisiblePoint& visPoint, 
 												const VectorR3& outDir, 
 												const VectorR3& fromDir) const = 0;
@@ -60,6 +61,9 @@ public:
 
 	double GetRoughness() const { return Roughness; }
 	void SetRoughness(double r) { Roughness = r; }
+
+	double GetTranslucent() const { return Translucent; }
+	void SetTransluscent(double t) { Translucent = t; }
 
 	void SetColorAmbient( double r, double g, double b);
 	void SetColorDiffuse( double r, double g, double b);
@@ -109,6 +113,7 @@ protected:
 	VectorR3 ColorSpecular;
 	VectorR3 ColorEmissive;
 	double Roughness;
+	double Translucent;
 
 public:
 	static bool CalcRefractDir( double indexOfRefraction, double indexOfRefractionInv,

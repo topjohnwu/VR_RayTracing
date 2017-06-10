@@ -331,11 +331,11 @@ double MaterialCookTorrance::CalcGeometricXmitFactor( const VectorR3& L, const V
 }
 
 // Use the average of the indices of refraction.
-bool MaterialCookTorrance::CalcRefractDir(const VectorR3& normal, const VectorR3& indir, VectorR3& outdir ) const
+bool MaterialCookTorrance::CalcRefractDir(const VectorR3& normal, const VectorR3& indir, const double& origEta, VectorR3& outdir ) const
 {
 	double meanEta;			// Mean of indices of refraction
 
 	meanEta = (IndexOfRefraction.x+IndexOfRefraction.y+IndexOfRefraction.z)/3.0;
 	double meanEtaInv = 1.0/meanEta;
-	return MaterialBase::CalcRefractDir( meanEta, meanEtaInv, normal, indir, outdir );
+	return MaterialBase::CalcRefractDir( meanEta / origEta, meanEtaInv * origEta, normal, indir, outdir );
 }
