@@ -110,8 +110,8 @@ float Mat4shiny = 512.0f;
 
 float Mat5spec[3] = {0.6f, 0.6f, 0.6f};
 float Mat5nonspec[3] = {0.0f, 0.0f, 0.0f};
-float Mat5reflect[3] = {0.3f, 0.3f, 0.3f};
-float Mat5trans[3] = {0.8f, 0.8f, 0.8f};
+float Mat5reflect[3] = {1.0f, 1.0f, 1.0f};
+float Mat5trans[3] = {1.0f, 1.0f, 1.0f};
 float Mat5shiny = 512.0f;
 
 float Mat6spec[3] = {0.2f, 0.2f, 0.2f};
@@ -205,8 +205,8 @@ void SetUpMaterials() {
 	mat5->SetColorReflective( Mat5reflect );
 	mat5->SetColorTransmissive( Mat5trans );
 	mat5->SetShininess( Mat5shiny );
-	mat5->SetIndexOfRefraction(1.5);	// Glass!
-	mat5->SetTransluscent(0.05);
+	mat5->SetIndexOfRefraction(1.458);	// Glass!
+	mat5->SetTransluscent(0.01);
 
 	Material* mat6 = new Material;
 	TheScene2.AddMaterial(mat6);

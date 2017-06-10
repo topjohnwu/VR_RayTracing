@@ -45,7 +45,8 @@ public:
 	virtual bool IsReflective() const = 0;
 	virtual bool IsTransmissive() const =0;
 	virtual bool CalcRefractDir( const VectorR3& normal, 
-								 const VectorR3& indir, VectorR3& outdir ) const = 0;
+								 const VectorR3& indir, const double& origEta, VectorR3& outdir ) const = 0;
+	virtual double GetEta() const = 0;
 	virtual VectorR3 GetReflectionColor( const VisiblePoint& visPoint, 
 												const VectorR3& outDir, 
 												const VectorR3& fromDir) const = 0;

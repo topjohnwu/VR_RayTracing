@@ -45,8 +45,9 @@ public:
 
 	void SetIndexOfRefraction( double x );
 	double GetIndexOfRefraction () const { return IndexOfRefraction; }
+	double GetEta () const { return IndexOfRefraction; }
 
-	bool CalcRefractDir( const VectorR3& normal, const VectorR3& indir, VectorR3& outdir ) const;
+	bool CalcRefractDir( const VectorR3& normal, const VectorR3& indir, const double& origEta, VectorR3& outdir ) const;
 
 	bool IsTransmissive() const { return TransmissiveFlag; }
 	bool IsReflective() const { return ReflectiveFlag; }
@@ -177,9 +178,9 @@ inline const VectorR3& Material::GetColorReflective() const {
 	return ColorReflective;
 }
 
-inline bool Material::CalcRefractDir( const VectorR3& normal, const VectorR3& indir, VectorR3& outdir ) const
+inline bool Material::CalcRefractDir( const VectorR3& normal, const VectorR3& indir, const double& origEta, VectorR3& outdir ) const
 {
-	return MaterialBase::CalcRefractDir(IndexOfRefraction, IndexOfRefractionInv, 
+	return MaterialBase::CalcRefractDir(IndexOfRefraction / origEta, IndexOfRefractionInv * origEta, 
 										normal, indir, outdir);
 }
 
