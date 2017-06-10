@@ -163,7 +163,7 @@ public:
 		} else {
 			ret = false;
 		}
-		printf("(%d, %d) ", i, j);
+		// printf("(%d, %d) ", i, j);
 		lock.unlock();
 		return ret;
 	}
@@ -175,35 +175,51 @@ private:
 
 #define subPixelNum 4
 #define traceDepth 3
-int THREAD_NUM = thread::hardware_concurrency();
-// int THREAD_NUM = 1;
+#define THREAD_NUM thread::hardware_concurrency()
+// #define THREAD_NUM 1
 
 /******************************** 
   TODO: Implement features here
 *********************************/
-
-static int getNext(int &i, int &j) {
-	i += THREAD_NUM;
-	if (i >= WindowWidth) {
-		i %= THREAD_NUM;
-		++j;
-	}
-	if (j >= WindowHeight)
-		return 0;
-	return 1;
-}
-
-static void tracePixel(const CameraView *MainView, int num) {
+static void tracePixel(PixelWindow *Window, const CameraView *MainView) {
 	VectorR3 PixelDir;
 	VectorR3 curPixelColor, tempPixelColor;
-	int i = num, j = 0;
-	while (getNext(i, j)) {
+	int i, j;
+	while (Window->getNext(i, j)) {
 		for( int k = 0; k < subPixelNum; ++k) {
 			for( int l = 0; l < subPixelNum; ++l) {
 				double x = i + (k + distribution(generator))/subPixelNum;
 				double y = j + (l + distribution(generator))/subPixelNum;
 				MainView->CalcPixelDirection(x,y,&PixelDir);
 				RayTrace( traceDepth, MainView->GetPosition(), PixelDir, curPixelColor );
+				tempPixelColor += curPixelColor;
+			}
+		}
+		tempPixelColor /= (subPixelNum*subPixelNum);
+		pixels->SetPixel(i, j, tempPixelColor);
+	}
+}
+
+static void tracePixelDepth(double flength, double aperture, PixelWindow *Window, const CameraView *MainView) {
+	VectorR3 PixelDir;
+	VectorR3 curPixelColor, tempPixelColor;
+	int i, j;
+	while (Window->getNext(i, j)) {
+		for( int k = 0; k < subPixelNum; ++k) {
+			for( int l = 0; l < subPixelNum; ++l) {
+				MainView->CalcPixelDirection(i,j,&PixelDir);
+				VectorR3 tempPos = MainView->GetPosition() + PixelDir * flength / MainView->GetScreenDistance();
+				VectorR3 dx = MainView->GetPixeldU();
+				VectorR3 dy = MainView->GetPixeldV();
+				dx.Normalize();
+				dy.Normalize();
+				double subPixelOffset = ((double)subPixelNum - 1) / 2;
+				VectorR3 newPos = MainView->GetPosition();
+				newPos += (k - subPixelOffset) * dx * aperture;
+				newPos += (l - subPixelOffset) * dy * aperture;
+				PixelDir = tempPos - newPos;
+				PixelDir.Normalize();
+				RayTrace( traceDepth, newPos, PixelDir, curPixelColor );
 				tempPixelColor += curPixelColor;
 			}
 		}
@@ -222,10 +238,11 @@ void RayTraceView(void)
 		ObjectKdTree.ResetStats();
 
 		thread threads[THREAD_NUM];
+		PixelWindow Window(WindowWidth, WindowHeight);
 
-		int num = 0;
 		for (thread &t : threads)
-			t = thread(tracePixel, &ActiveScene->GetCameraView(), num++);
+			// t = thread(tracePixel, &Window, &ActiveScene->GetCameraView());
+			t = thread(tracePixelDepth, 350, 0.05, &Window, &ActiveScene->GetCameraView());
 
 		for (thread &t : threads)
 			t.join();
