@@ -163,7 +163,7 @@ public:
 		} else {
 			ret = false;
 		}
-		printf("(%d, %d) ", i, j);
+		// printf("(%d, %d) ", i, j);
 		lock.unlock();
 		return ret;
 	}
@@ -175,8 +175,9 @@ private:
 
 #define subPixelNum 4
 #define traceDepth 3
-#define THREAD_NUM thread::hardware_concurrency()
+// #define THREAD_NUM thread::hardware_concurrency()
 // #define THREAD_NUM 1
+const int THREAD_NUM  = 4;
 
 /******************************** 
   TODO: Implement features here
@@ -200,6 +201,34 @@ static void tracePixel(PixelWindow *Window, const CameraView *MainView) {
 	}
 }
 
+static void tracePixelDepth(double flength, double aperture, PixelWindow *Window, const CameraView *MainView) {
+	VectorR3 PixelDir;
+	VectorR3 curPixelColor, tempPixelColor;
+	int i, j;
+	while (Window->getNext(i, j)) {
+		for( int k = 0; k < subPixelNum; ++k) {
+			for( int l = 0; l < subPixelNum; ++l) {
+				MainView->CalcPixelDirection(i,j,&PixelDir);
+				VectorR3 tempPos = MainView->GetPosition() + PixelDir * flength / MainView->GetScreenDistance();
+				VectorR3 dx = MainView->GetPixeldU();
+				VectorR3 dy = MainView->GetPixeldV();
+				dx.Normalize();
+				dy.Normalize();
+				double subPixelOffset = ((double)subPixelNum - 1) / 2;
+				VectorR3 newPos = MainView->GetPosition();
+				newPos += (k - subPixelOffset) * dx * aperture;
+				newPos += (l - subPixelOffset) * dy * aperture;
+				PixelDir = tempPos - newPos;
+				PixelDir.Normalize();
+				RayTrace( traceDepth, newPos, PixelDir, curPixelColor );
+				tempPixelColor += curPixelColor;
+			}
+		}
+		tempPixelColor /= (subPixelNum*subPixelNum);
+		pixels->SetPixel(i, j, tempPixelColor);
+	}
+}
+
 void RayTraceView(void)
 {
 	auto start = chrono::system_clock::now();
@@ -209,11 +238,12 @@ void RayTraceView(void)
 		MyStats.Init();
 		ObjectKdTree.ResetStats();
 
-		thread threads[THREAD_NUM];
+		thread threads[2];
 		PixelWindow Window(WindowWidth, WindowHeight);
 
 		for (thread &t : threads)
-			t = thread(tracePixel, &Window, &ActiveScene->GetCameraView());
+			// t = thread(tracePixel, &Window, &ActiveScene->GetCameraView());
+			t = thread(tracePixelDepth, 350, 0.05, &Window, &ActiveScene->GetCameraView());
 
 		for (thread &t : threads)
 			t.join();
@@ -240,7 +270,7 @@ void RayTraceView(void)
 
 	auto end = chrono::system_clock::now();
 	auto elapsed = chrono::duration_cast<std::chrono::seconds>(end - start);
-	cout << "Raytrace (" << WindowWidth << "x" << WindowHeight
+	cout << "Raytrace (" << WindowWidth << "x" << WindowHeight 
 	     << ") -j" << THREAD_NUM << " Time: " << elapsed.count() << "(s)" << endl;
 
 }
