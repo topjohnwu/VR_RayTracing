@@ -27,6 +27,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <vector>
 #include <iostream>
 
 // If you do not have GLUT installed, you can use the basic GL routines instead.
@@ -246,7 +247,8 @@ void RayTraceView(void)
 		MyStats.Init();
 		ObjectKdTree.ResetStats();
 
-		thread threads[THREAD_NUM];
+		vector<thread> threads;
+		threads.resize(THREAD_NUM);
 		PixelWindow Window(WindowWidth, WindowHeight);
 
 		for (thread &t : threads)
