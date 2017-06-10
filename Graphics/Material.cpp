@@ -78,7 +78,7 @@ void Material::CalcLocalLighting(
 				VectorR3 T;		// Transmission direction
 				facingNormal = V;
 				facingNormal.Negate();		// Use temporarily as incoming vector
-				this->CalcRefractDir(N, facingNormal, T);
+				this->CalcRefractDir(N, facingNormal, IndexOfRefraction, T);
 				specularFactor = (T^L);
 			}
 			if ( specularFactor>0.0 ) {
