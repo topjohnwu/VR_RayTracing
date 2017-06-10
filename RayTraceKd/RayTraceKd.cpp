@@ -182,6 +182,8 @@ private:
 /******************************** 
   TODO: Implement features here
 *********************************/
+
+// Unused for now
 static void tracePixel(PixelWindow *Window, const CameraView *MainView) {
 	VectorR3 PixelDir;
 	VectorR3 curPixelColor, tempPixelColor;
@@ -225,7 +227,8 @@ static void tracePixelDepth(double flength, double aperture, PixelWindow *Window
 				newPos += (l - subPixelOffset) * dy * aperture;
 				PixelDir = tempPos - newPos;
 				PixelDir.Normalize();
-				RayTrace( traceDepth, newPos, PixelDir, curPixelColor );
+				double tempHitDist;
+				RayTrace( traceDepth, newPos, PixelDir, curPixelColor, tempHitDist );
 				tempPixelColor += curPixelColor;
 			}
 		}
@@ -253,32 +256,6 @@ void RayTraceView(void)
 		for (thread &t : threads)
 			t.join();
 
-		// int TraceDepth = 3;
-		// int subPixelNum = 4;
-		// for ( i=0; i<WindowWidth; i++) {
-		// 	for ( j=0; j<WindowHeight; j++ ) {
-		// 		//if ( i==15 && (j==91 || j==169) ) {
-		// 		// if ( i==16 && j==WindowHeight-106 ) {
-		// 		// 	int iii = 0;
-		// 		// }
-		// 		//i = 15;
-		// 		//j = 91;
-		// 		//j = 169;
-		// 		VectorR3 tempPixelColor;
-		// 		for( int k = 0; k < subPixelNum; ++k) {
-		// 			for( int l = 0; l < subPixelNum; ++l) {
-		// 				double x = i + (k + distribution(generator))/subPixelNum;
-		// 				double y = j + (l + distribution(generator))/subPixelNum;
-		// 				MainView.CalcPixelDirection(x,y,&PixelDir);
-		// 				double tempHitDist;
-		// 				RayTrace( TraceDepth, MainView.GetPosition(), PixelDir, curPixelColor, tempHitDist );
-		// 				tempPixelColor += curPixelColor;						
-		// 			}
-		// 		}
-		// 		tempPixelColor /= (subPixelNum*subPixelNum);
-		// 		pixels->SetPixel(i,j,tempPixelColor);
-		// 	}
-		// }
 		WidthRayTraced = WindowWidth;			// Set these values to show scene has been computed.
 		NumScanLinesRayTraced = WindowHeight;
 		MyStats.GetKdRunData( ObjectKdTree );
