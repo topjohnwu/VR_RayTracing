@@ -207,7 +207,11 @@ static void tracePixelDepth(double flength, double aperture, PixelWindow *Window
 	while (Window->getNext(i, j)) {
 		for( int k = 0; k < subPixelNum; ++k) {
 			for( int l = 0; l < subPixelNum; ++l) {
-				MainView->CalcPixelDirection(i,j,&PixelDir);
+				double x = i + (k + distribution(generator))/subPixelNum;
+				double y = j + (l + distribution(generator))/subPixelNum;
+				// double x = i + distribution(generator);
+				// double y = j + distribution(generator);				
+				MainView->CalcPixelDirection(x,y,&PixelDir);
 				VectorR3 tempPos = MainView->GetPosition() + PixelDir * flength / MainView->GetScreenDistance();
 				VectorR3 dx = MainView->GetPixeldU();
 				VectorR3 dy = MainView->GetPixeldV();
