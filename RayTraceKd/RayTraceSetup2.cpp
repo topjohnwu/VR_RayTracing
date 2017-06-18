@@ -108,14 +108,20 @@ float Mat4nonspec[3] = {0.0f, 0.0f, 0.0f};
 float Mat4reflect[3] = {0.1f, 0.1f, 0.1f};
 float Mat4shiny = 512.0f;
 
-float Mat5spec[3] = {0.6f, 0.6f, 0.6f};
-float Mat5nonspec[3] = {0.0f, 0.0f, 0.0f};
-float Mat5reflect[3] = {1.0f, 1.0f, 1.0f};
-float Mat5trans[3] = {1.0f, 1.0f, 1.0f};
+float Mat5spec[3] = {0.3f, 0.3f, 0.6f};
+float Mat5nonspec[3] = {0.0f, 0.0f, 0.1f};
+float Mat5reflect[3] = {0.5f, 0.5f, 0.5f};
+float Mat5trans[3] = {0.1f, 0.1f, 0.8f};
 float Mat5shiny = 512.0f;
 
+float Mat55spec[3] = {0.6f, 0.6f, 0.6f};
+float Mat55nonspec[3] = {0.0f, 0.0f, 0.0f};
+float Mat55reflect[3] = {1.0f, 1.0f, 1.0f};
+float Mat55trans[3] = {1.0f, 1.0f, 1.0f};
+float Mat55shiny = 512.0f;
+
 float Mat6spec[3] = {0.2f, 0.2f, 0.2f};
-float Mat6nonspec[3] = {0.0f, 0.2f, 0.8f};
+float Mat6nonspec[3] = {0.6f, 0.6f, 0.6f};
 float Mat6reflect[3] = {0.3f, 0.3f, 0.3f};
 float Mat6shiny = 160.0f;
 
@@ -206,7 +212,7 @@ void SetUpMaterials() {
 	mat5->SetColorTransmissive( Mat5trans );
 	mat5->SetShininess( Mat5shiny );
 	mat5->SetIndexOfRefraction(1.458);	// Glass!
-	mat5->SetTransluscent(0.01);
+	mat5->SetTransluscent(0.05);
 
 	Material* mat6 = new Material;
 	TheScene2.AddMaterial(mat6);
@@ -242,28 +248,37 @@ void SetUpMaterials() {
 
 	Material* mat10 = new Material;
 	TheScene2.AddMaterial(mat10);
-	mat10->SetColorAmbientDiffuse(VectorR3(0.7, 0.7, 0.7));
-	mat10->SetColorSpecular(VectorR3(0.8, 0.8, 0.8));
+	mat10->SetColorAmbientDiffuse(VectorR3(0.05, 0.05, 0.05));
+	mat10->SetColorSpecular(VectorR3(0.95, 0.95, 0.95));
 	mat10->SetColorReflective(VectorR3(0.8, 0.8, 0.8));
 	mat10->SetShininess(160);
 	mat10->SetRoughness(0.001);
 
 	Material* mat11 = new Material;
 	TheScene2.AddMaterial(mat11);
-	mat11->SetColorAmbientDiffuse(VectorR3(0.7, 0.7, 0.7));
-	mat11->SetColorSpecular(VectorR3(0.8, 0.8, 0.8));
+	mat11->SetColorAmbientDiffuse(VectorR3(0.05, 0.05, 0.05));
+	mat11->SetColorSpecular(VectorR3(0.95, 0.95, 0.95));
 	mat11->SetColorReflective(VectorR3(0.8, 0.8, 0.8));
 	mat11->SetShininess(160);
 	mat11->SetRoughness(0.01);
 
 	Material* mat12 = new Material;
 	TheScene2.AddMaterial(mat12);
-	mat12->SetColorAmbientDiffuse(VectorR3(0.7, 0.7, 0.7));
-	mat12->SetColorSpecular(VectorR3(0.8, 0.8, 0.8));
+	mat12->SetColorAmbientDiffuse(VectorR3(0.05, 0.05, 0.05));
+	mat12->SetColorSpecular(VectorR3(0.95, 0.95, 0.95));
 	mat12->SetColorReflective(VectorR3(0.8, 0.8, 0.8));
 	mat12->SetShininess(160);
 	mat12->SetRoughness(0.05);
 
+	Material* mat13 = new Material;
+	TheScene2.AddMaterial(mat13);
+	mat13->SetColorAmbientDiffuse( Mat55nonspec );
+	mat13->SetColorSpecular( Mat55spec );
+	mat13->SetColorReflective( Mat55reflect );
+	mat13->SetColorTransmissive( Mat55trans );
+	mat13->SetShininess( Mat55shiny );
+	mat13->SetIndexOfRefraction(1.458);	// Glass!
+	mat13->SetTransluscent(0.05);
 // // A near perfect mirror
 // float Mat9spec[3] = {0.95f, 0.95f, 0.95f};
 // float Mat9nonspec[3] = {0.05f, 0.05f, 0.05f};
@@ -387,8 +402,11 @@ void SetUpViewableObjects() {
 
 	// Right transparent sphere
 
+	ViewableSphere* vsXX = new ViewableSphere();
+	vsXX->SetRadius( radS );
+	vsXX->SetMaterial( &TheScene2.GetMaterial(13) );
 	vs = new ViewableSphere();
-	*vs = *vsX;
+	*vs = *vsXX;
 	vs->SetCenter( radS, (sqrt(2.0)*radS), zS );
 	TheScene2.AddViewable( vs );
 
