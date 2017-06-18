@@ -100,7 +100,7 @@ bool RayTraceMode = false;		// Set true for RayTraciing,  false for rendering wi
 long NumScanLinesRayTraced = -1;
 long WidthRayTraced = -1;
 
-double g_fLength = 350;
+double g_fLength = 500;
 double g_aperture = 0.05;
 // const double MAX_DIST = 50;	// Max. view distance
 
@@ -475,13 +475,16 @@ void RayTrace( int TraceDepth, const VectorR3& pos, const VectorR3 dir,
 					double translucent = thisMat->GetTranslucent();
 					if (translucent > 0.0000001) {
 						double rate = exp(-1 * translucent * tempHitDist);
-						moreColor.x *= rate;
-						moreColor.y *= rate;
-						moreColor.z *= rate;
+						// moreColor.x *= rate;
+						// moreColor.y *= rate;
+						// moreColor.z *= rate;
+						moreColor.x *= exp(-1 * translucent * tempHitDist / c.x);
+						moreColor.y *= exp(-1 * translucent * tempHitDist / c.y);
+						moreColor.z *= exp(-1 * translucent * tempHitDist / c.z);
 					}
-					moreColor.x *= c.x;
-					moreColor.y *= c.y;
-					moreColor.z *= c.z;
+					// moreColor.x *= c.x;
+					// moreColor.y *= c.y;
+					// moreColor.z *= c.z;
 					if (transAndRef) {
 						moreColor.x *= transmitRate;
 						moreColor.y *= transmitRate;
