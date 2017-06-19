@@ -524,9 +524,9 @@ void InitializeSceneGeometry()
 
 // One of the following three lines should un-commented to select the way
 //		the scene is loaded into the SceneDescription.
-//#define MODE 1  /* Use this line to manually set the scene in RayTraceSetup2.cpp */
+#define MODE 1  /* Use this line to manually set the scene in RayTraceSetup2.cpp */
 //#define MODE 2  /* Use this line to load the scene data from an .obj file. */
-#define MODE 3  /* Use this line to load the scene data from a .nff file. */
+//#define MODE 3  /* Use this line to load the scene data from a .nff file. */
 #if MODE==1
 	SetUpScene2();
 	ActiveScene = &TheScene2;
