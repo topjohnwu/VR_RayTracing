@@ -96,9 +96,12 @@ PixelArray* pixels;		// Array of pixels
 bool RayTraceMode = false;		// Set true for RayTraciing,  false for rendering with OpenGL
 								// Rendering with OpenGL does not support all features, esp., texture mapping
 // Next two variables can be used to keep from re-raytracing a window.
+
 long NumScanLinesRayTraced = -1;
 long WidthRayTraced = -1;
 
+double g_fLength = 350;
+double g_aperture = 0.05;
 // const double MAX_DIST = 50;	// Max. view distance
 
 SceneDescription* ActiveScene;
@@ -253,7 +256,7 @@ void RayTraceView(void)
 
 		for (thread &t : threads)
 			// t = thread(tracePixel, &Window, &ActiveScene->GetCameraView());
-			t = thread(tracePixelDepth, 350, 0.05, &Window, &ActiveScene->GetCameraView());
+			t = thread(tracePixelDepth, g_fLength, g_aperture, &Window, &ActiveScene->GetCameraView());
 
 		for (thread &t : threads)
 			t.join();
@@ -658,6 +661,34 @@ void mySpecialFunc( int key, int x, int y )
 		NumScanLinesRayTraced = WidthRayTraced = -1;	// Signal view has changed		
 		glutPostRedisplay();
 		break;
+	case GLUT_KEY_F1: 
+		g_fLength *= 1.1;
+		cout << "Focal Length: " << g_fLength << endl;
+		RayTraceMode = false;
+		NumScanLinesRayTraced = WidthRayTraced = -1;	// Signal view has changed		
+		glutPostRedisplay();
+		break;
+	case GLUT_KEY_F2: 
+		g_fLength /= 1.1;
+		cout << "Focal Length: " << g_fLength << endl;
+		RayTraceMode = false;
+		NumScanLinesRayTraced = WidthRayTraced = -1;	// Signal view has changed		
+		glutPostRedisplay();
+		break;
+	case GLUT_KEY_F3: 
+		g_aperture *= 1.1;
+		cout << "Aperature: " << g_aperture << endl;
+		RayTraceMode = false;
+		NumScanLinesRayTraced = WidthRayTraced = -1;	// Signal view has changed		
+		glutPostRedisplay();
+		break;
+	case GLUT_KEY_F4: 
+		g_aperture /= 1.1;
+		cout << "Aperature: " << g_aperture << endl;
+		RayTraceMode = false;
+		NumScanLinesRayTraced = WidthRayTraced = -1;	// Signal view has changed		
+		glutPostRedisplay();
+		break;
 	}
 }
 
@@ -722,6 +753,10 @@ int main( int argc, char** argv )
 {
 	fprintf( stdout, "Press 'g' or space bar to start ray tracing. (And then wait!)\n" );
 	fprintf( stdout, "Press 'G' to return to OpenGL render mode.\n" );
+	fprintf( stdout, "Press 'F1' to increase the focal length.\n" );
+	fprintf( stdout, "Press 'F2' to decrease the focal length.\n" );
+	fprintf( stdout, "Press 'F3' to increase the aperture.\n" );
+	fprintf( stdout, "Press 'F4' to decrease the aperture.\n" );
 	fprintf( stdout, "Arrow keys change view direction (and use OpenGL).\n" );
 	fprintf( stdout, "Home/End keys alter view distance --- resizing keeps it same view size.\n");
 
