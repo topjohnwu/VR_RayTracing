@@ -121,7 +121,7 @@ float Mat55trans[3] = {1.0f, 1.0f, 1.0f};
 float Mat55shiny = 512.0f;
 
 float Mat6spec[3] = {0.2f, 0.2f, 0.2f};
-float Mat6nonspec[3] = {0.6f, 0.6f, 0.6f};
+float Mat6nonspec[3] = {0.3f, 0.3f, 0.3f};
 float Mat6reflect[3] = {0.3f, 0.3f, 0.3f};
 float Mat6shiny = 160.0f;
 
